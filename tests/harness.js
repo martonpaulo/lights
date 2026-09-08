@@ -17,6 +17,7 @@ export const PAGE = join(ROOT, 'index.html');
 const EXPOSED = [
   'n', 'e', 't', 'events', 'bombs', 'selection', 'selected', 'audioStarted',
   'toneContext', 'availableVoices', 'eventLabel', 'encounters', 'affinity', 'regard',
+  'camX', 'camY', 'activeSpeech', 'pendingSpeech', 'speakQueue', 'selectedEvent',
 ];
 
 const FUNCTIONS = [
@@ -576,6 +577,35 @@ export function loadField(options = {}) {
       }
     },
     livingNodes: () => sandbox.__field.n.filter((node) => !node.absent),
+    /** Presses the pointer over a node's current position, the way a click does. */
+    press(node, extra = {}) {
+      const canvas = page.byId.get('c');
+      return canvas.dispatch('pointerdown', {
+        pointerId: 1,
+        button: 0,
+        buttons: 1,
+        isPrimary: true,
+        clientX: node.x + sandbox.__field.camX,
+        clientY: node.y + sandbox.__field.camY,
+        ...extra,
+      });
+    },
+    /** Presses empty space at the given field coordinates. */
+    pressAt(fieldX, fieldY, extra = {}) {
+      const canvas = page.byId.get('c');
+      return canvas.dispatch('pointerdown', {
+        pointerId: 1,
+        button: 0,
+        buttons: 1,
+        isPrimary: true,
+        clientX: fieldX + sandbox.__field.camX,
+        clientY: fieldY + sandbox.__field.camY,
+        ...extra,
+      });
+    },
+    key(key, extra = {}) {
+      return windowStub.dispatch('keydown', { key, ...extra });
+    },
   };
 
   if (autoStart) harness.frame(1);
