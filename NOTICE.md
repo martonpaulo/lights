@@ -23,6 +23,7 @@ This attribution must travel with any copy or adaptation that includes the audio
 
 ### Speech and audio synthesis
 
-Voices come from the viewer's own operating system through the Web Speech API, and every other
-sound is synthesised in the browser with the Web Audio API. No audio beyond the file above is
-bundled or fetched.
+Voices come from the viewer's own operating system through the Web Speech API, restricted to those
+the platform synthesises locally, so no spoken line is sent to a service. Every other sound is
+synthesised in the browser with the Web Audio API. No audio beyond the file above is bundled or
+fetched.

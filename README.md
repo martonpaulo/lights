@@ -42,9 +42,11 @@ Levels persist in your browser.
 
 ## Requirements
 
-A current browser with Canvas 2D, Web Audio and Web Speech. Voices come from your own operating
-system; on Chrome the Google neural voices sound markedly better than the compact system ones. The
-piece runs without them, silently.
+A current browser with Canvas 2D, Web Audio and Web Speech. Only voices your operating system
+synthesises locally are used, so no line ever leaves your machine; network-backed voices such as
+Chrome's Google voices are deliberately skipped. On macOS the Enhanced and Premium system voices
+sound markedly better than the compact ones. Without a local English voice the lines are still
+written on screen and the piece simply stays silent.
 
 ## Running it locally
 
@@ -80,7 +82,8 @@ server. The only thing stored is your three volume levels, in `localStorage`.
 
 ## Limitations
 
-- Speech quality depends entirely on the voices your system has installed.
+- Speech quality depends entirely on the local English voices your system has installed, and there
+  may be none.
 - English only. The written lines are the work, and translating them would produce a different piece.
 - Tuned for a desktop-sized window; it runs on a phone but the field gets crowded.
 
