@@ -18,6 +18,7 @@ const EXPOSED = [
   'n', 'e', 't', 'events', 'bombs', 'selection', 'selected', 'audioStarted',
   'toneContext', 'availableVoices', 'eventLabel', 'encounters', 'affinity', 'regard',
   'camX', 'camY', 'activeSpeech', 'pendingSpeech', 'speakQueue', 'selectedEvent',
+  'dragged', 'draggedEvent', 'bonds', 'blastStack',
 ];
 
 const FUNCTIONS = [
