@@ -2,7 +2,7 @@
 
 Forty points of light drift, bond, age and speak in a dark field.
 
-**[Open it →](https://martonpaulo.github.io/small-lights/)**
+**[Open it →](https://martonpaulo.com/small-lights/)**
 
 ## What happens in there
 
@@ -64,7 +64,9 @@ There is no build or test runner. Check the embedded JavaScript before publishin
 node -e "const s=require('fs').readFileSync('index.html','utf8');new Function(s.match(/<script>([\\s\\S]*?)<\\/script>/)[1]);console.log('OK')"
 ```
 
-Then serve the page locally and confirm that it starts with forty lights and no console errors.
+Then serve the page locally and confirm that it starts with forty lights and no console errors
+in Chromium, Gecko and WebKit. Separate dependency-free regression tests using `node:test` are
+approved; once tests exist, run them with `node --test`. No persistent tests are present yet.
 
 ## Security
 

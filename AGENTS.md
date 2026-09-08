@@ -7,7 +7,7 @@
 - Benefit-first description: A dark field where forty points of light drift, bond, age and speak, so watching it rewards attention instead of asking for it.
 - Repository: `martonpaulo/small-lights` (public)
 - Public identifiers: none. The product is a single static page served at its landing page URL; there is no package, module, or bundle identifier.
-- Landing page: https://martonpaulo.github.io/small-lights/ — GitHub Pages, served from `main` at the repository root. The landing page is the product; there is no separate marketing site.
+- Landing page: https://martonpaulo.com/small-lights/ — GitHub Pages, served from `main` at the repository root. The landing page is the product; there is no separate marketing site.
 - License: `CC-BY-4.0`
 - Copyright: 2026 Marton Paulo
 - Development language: English.
@@ -16,12 +16,17 @@
 - Commit policy: commit only when explicitly requested.
 - Push policy: push only when explicitly requested. A push publishes: GitHub Pages redeploys `main` automatically.
 - Product versioning: none. The product has no user-visible version, no `CHANGELOG.md`, no tags, and no releases. Git history is the record.
+- Browser acceptance: Chromium, Gecko and WebKit. Validate behavior in all three engine families; report unavailable engines and human-only checks explicitly.
+- Agent automation: `disabled`
+- Agent clients: Codex, Claude and Antigravity CLI. `AGENTS.md` is canonical; `CLAUDE.md` is a relative symlink to it. Antigravity CLI (`agy` 1.1.27) uses the root `AGENTS.md`; root-guidance loading was observed during setup on 2026-09-09 (browser families and automation state). Formal collection verification remains pending because it requires a project-local skill file, which this repository does not own. The legacy `.gemini/rules/agents.md` link is not an active adapter for these selected clients.
+- Default-branch approving review: not required for the manual, direct-to-`main` workflow. Automated merging is not configured.
+- Regression tests: separate persistent `node:test` files are allowed without dependencies. The application remains one HTML file; test files are not runtime modules.
 - Merge policy: merge commits only, every commit of the branch preserved. Never squash.
 - Commit subject: a commit made for an issue ends with `(#<issue number>)`.
 - Delete branches after merge: enabled.
 - Release, signing, and secret-storage policy: Not applicable. There is no build, artifact, signing identity, or secret; publication is a push to `main`.
 
-Treat these values as stable project decisions. Change an established identifier, license, visibility, branch policy, versioning model, localization strategy, landing-page contract, or release policy only through an explicit task that describes the migration and downstream effects.
+Treat these values as stable project decisions. Change an established identifier, license, visibility, branch policy, versioning model, localization strategy, landing-page contract, agent-automation decision, or release policy only through an explicit task that describes the migration and downstream effects.
 
 ## Agent skill paths
 
@@ -49,15 +54,18 @@ when there is real content for it; none of these are placeholders to fill.
 
 ## Patterns this project repeats
 
-These are read from the code, not imposed on it. A change that would break one of them, or
-establish a new one, stops and asks first, naming the existing pattern, the proposed one, and why
-the existing one does not fit. Deviating is allowed; deviating silently is what leaves two patterns.
+These are the recorded project contracts. Open issues track places where the current code does
+not yet satisfy them; do not weaken a contract to hide an implementation gap. A change that would
+break a recorded contract or establish a new pattern stops and asks first, naming the existing
+pattern, the proposed one, and why the existing one does not fit.
 
 - **One file, three layers.** `index.html` holds markup, a single `<style>` block, and a single
   `<script>`. No build step, no modules, no dependencies. A second file needs a reason stronger than
-  tidiness.
+  tidiness. The owner-approved exception is separate dependency-free regression tests.
 - **Two loops.** A `setInterval` at 16 ms owns physics and state; `requestAnimationFrame` owns
-  drawing and owns no simulation. Anything that changes the world goes in the first.
+  drawing and owns no simulation. Anything that changes the world goes in the first. The world
+  pauses while the document is hidden and resumes without compensating for hidden elapsed time
+  (desired behavior tracked in issue #5); this does not override explicit music playback intent.
 - **A node is a flat object.** Every trait is a plain property on the node, initialised where nodes
   are created and mirrored in `reborn()`. A new trait is added in both places or it leaks between
   lives.
@@ -76,6 +84,13 @@ the existing one does not fit. Deviating is allowed; deviating silently is what 
   because the text is spoken aloud. Placeholders are `{name}`, `{friend}`, `{rival}`.
 - **Announcements are gated.** Everything user-visible goes through `announceEvent`, which enforces
   one at a time and a cooldown for minor notes.
+
+## Long-running operations
+
+- Use bounded tool waits and observable completion conditions; give progress commentary at least once per minute when supported.
+- Inspect output and state before interrupting or retrying. Elapsed time alone does not prove a stall.
+- After an interruption, preserve useful evidence, diagnose the cause and narrow or change the next attempt; never repeat an unchanged failure.
+- Do not add polling infrastructure merely to monitor an agent task.
 
 ## Before editing
 
@@ -131,9 +146,30 @@ the existing one does not fit. Deviating is allowed; deviating silently is what 
 - Durable documentation describes responsibilities, contracts, invariants, commands, and decisions. Audits cite exact evidence. Manuals use exact filenames only when users must act on them and the names are stable contracts.
 - Update the smallest canonical documentation section when a durable contract changes. Do not create empty documentation for possible future use.
 - Keep the README easy to scan. Cover benefit, behavior, requirements, setup, usage, validation, security, privacy, limitations, landing page, and download where applicable.
+- Use the recorded public name as the README H1 and preserve its branding and casing.
+- Give every new or materially edited fenced block its real language identifier, or `text` for plain output; preserve unrelated historical content.
 - Use badges, real screenshots, statistics, and emoji only when they improve comprehension and can remain current.
 - Preserve third-party licenses, copyright, attribution, and notices. Maintain `NOTICE.md` or the established attribution file when required.
 - Maintain `CHANGELOG.md` when the project has public releases.
+
+## Durable project learning
+
+At wrap-up, preserve only verified, recurring project knowledge in its existing canonical owner.
+Do not retain hypotheses, raw logs, private data, transient machine state or issue-specific plans.
+An adjacent learning outside the task is proposal-only: state `Evidence`, `Canonical owner`,
+`Smallest change`, the exact `Draft`, and `Decision requested: Approve, reject, or revise.`
+Wait for approval before writing an adjacent proposal; documentation required by the accepted task
+remains part of that task. Never publish such a proposal externally without authorization.
+
+## User attention
+
+When a material choice, permission, action or distinct issue proposal needs the owner, show one
+clearly separated card in the conversation language. Name what is needed, why, the evidence,
+options and tradeoffs where relevant, the recommendation, and an exact reply format. Use the
+client's structured question tool when available. For an approval, name the exact target/change,
+risk, reversibility and recovery. For a blocker, name the smallest unblocking action and the
+observable condition for resumption. Do not hide a pending decision in a general status summary.
+Follow the active workflow's authority: a proposed follow-up does not authorize its publication.
 
 ## Configuration and repository hygiene
 
@@ -141,6 +177,16 @@ the existing one does not fit. Deviating is allowed; deviating silently is what 
 - When local environment variables exist, maintain `.env.example` with every supported name and a safe placeholder in the same syntax as the real value.
 - Configure dependency updates, CI, release workflows, a release channel, signing, and secure secret storage when distribution or project risk requires them. Do not add placeholder automation.
 - Keep secrets in the platform or provider's secure store, never in versioned files.
+
+## Test ownership and commands
+
+The product has no build step or package dependencies. Keep persistent regression tests under
+`tests/` using Node's built-in `node:test`; create that path only with real test content. Run them
+with `node --test` once they exist. This setup does not create a placeholder test runner or CI.
+Tests exercise observable simulation transitions and browser API boundaries, not source-text
+snapshots, duplicated constants or private implementation wiring. Browser acceptance remains
+Chromium, Gecko and WebKit; Node tests do not substitute for those rendered/integration checks.
+The existing embedded-script syntax command in `README.md` remains valid before tests are added.
 
 ## Tests and validation
 
