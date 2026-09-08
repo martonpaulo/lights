@@ -121,7 +121,7 @@ function reborn(node,index){clearBonds(index);clearEncounters(index);for(let k=0
 node.age=18+Math.floor(Math.random()*5);node.lifespan=66+Math.random()*32;node.about=BIRTH_ABOUT[Math.floor(Math.random()*BIRTH_ABOUT.length)];
 node.charge=(Math.random()-.3)*.7;node.mood=0;node.stability=.2+Math.random()*.5;node.sensitivity=.7+Math.random()*1;
 node.sociability=-1+Math.random()*2;node.trait=Math.random()<.34?TRAIT_KEYS[Math.floor(Math.random()*TRAIT_KEYS.length)]:null;
-node.trail=Math.random()<.08?[]:null;node.voiceRef=null;node.voiceSeed=Math.floor(Math.random()*97);node.stage=0;node.dying=0;node.absent=0;node.friend=null;node.rival=null;node.reputation=0;resetLearning(node);node.bondedAt=t;
+node.trail=Math.random()<.08?[]:null;node.voiceRef=null;node.voiceSeed=Math.floor(Math.random()*97);node.stage=0;node.dying=0;node.absent=0;node.portalCooldown=0;node.friend=null;node.rival=null;node.reputation=0;resetLearning(node);node.bondedAt=t;
 node.x=Math.random()*c.clientWidth;node.y=Math.random()*c.clientHeight;node.vx=(Math.random()-.5)*.2;node.vy=(Math.random()-.5)*.2;
 agePersona(node);if(selected===node){selected=null;selection=selection.filter(item=>item!==node);showSelectionCard()}}
 function ageField(){n.forEach((node,index)=>{
@@ -349,11 +349,15 @@ if(!key){bondsBroken=0;return}bondsBroken=0;let pool=SOCIETY_NOTES[key];announce
 function scheduleObservation(){setTimeout(()=>{observeSociety();scheduleObservation()},17000+Math.random()*13000)}
 scheduleObservation();
 function updateEvents(){let w=c.clientWidth,h=c.clientHeight;
+// The transit cooldown is simulation time, so one tick spends one tick of it no
+// matter how many doorways are open. Doing it here also stops a light that just
+// came out of one pair from being taken by another pair in the same tick.
+for(let i=0;i<n.length;i++){let a=n[i];if(!a.absent&&a.portalCooldown>0)a.portalCooldown=Math.max(0,a.portalCooldown-.016)}
 for(let i=events.length-1;i>=0;i--){let event=events[i];if(draggedEvent&&draggedEvent.item===event)continue;event.age+=.016;
 if(event.type==='comet'){event.x+=event.vx;event.y+=event.vy;event.tail.unshift({x:event.x,y:event.y});if(event.tail.length>26)event.tail.pop();
 n.forEach(a=>{if(a.absent)return;let dx=event.x-a.x,dy=event.y-a.y,d=Math.max(22,Math.hypot(dx,dy)),force=Math.min(.63,182/(d*d));a.vx+=dx/d*force;a.vy+=dy/d*force;if(d<180)a.boost=Math.max(a.boost||0,(1-d/180)*.5)});
 if(event.x<-120||event.x>w+120||event.y<-120||event.y>h+120)events.splice(i,1);continue}
-if(event.type==='portal'){n.forEach(a=>{if(a===dragged||a.absent)return;if(a.portalCooldown>0){a.portalCooldown-=.016;return}
+if(event.type==='portal'){n.forEach(a=>{if(a===dragged||a.absent)return;if(a.portalCooldown>0)return;
 let intoA=Math.hypot(a.x-event.a.x,a.y-event.a.y)<event.r,intoB=Math.hypot(a.x-event.b.x,a.y-event.b.y)<event.r;
 if(!intoA&&!intoB)return;let exit=intoA?event.b:event.a,speed=Math.hypot(a.vx,a.vy)||.1,angle=Math.atan2(a.vy,a.vx);
 a.x=exit.x+Math.cos(angle)*(event.r+6);a.y=exit.y+Math.sin(angle)*(event.r+6);
