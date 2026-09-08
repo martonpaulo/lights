@@ -18,8 +18,9 @@ happened to it.
   rival it steers toward and away from.
 - **Experience changes behaviour.** Each light trains a tiny online model from its own encounters,
   then approaches people it expects to get along with and avoids those it does not.
-- **Entanglement** pairs the most distant unbound lights. Bound pairs flicker in antiphase and pass
-  each other mirrored impulses across the field.
+- **Entanglement** starts from the unbound light that has waited longest, then pairs it with
+  whichever free light scores highest on a mix of distance and its own waiting time. Bound pairs
+  flicker in antiphase and pass each other mirrored impulses across the field.
 - **Lives end.** A light ages a year every fourteen seconds, changes personality as it passes
   through its stages, and eventually fades. Its place stays empty a while before someone new arrives
   with a fresh name and history.
