@@ -18,7 +18,7 @@ const EXPOSED = [
   'n', 'e', 't', 'events', 'bombs', 'selection', 'selected', 'audioStarted',
   'toneContext', 'availableVoices', 'eventLabel', 'encounters', 'affinity', 'regard',
   'camX', 'camY', 'activeSpeech', 'pendingSpeech', 'speakQueue', 'selectedEvent',
-  'dragged', 'draggedEvent', 'bonds', 'blastStack',
+  'dragged', 'draggedEvent', 'bonds', 'blastStack', 'musicChosen',
 ];
 
 const FUNCTIONS = [
@@ -226,13 +226,18 @@ class AudioElement extends Element {
     this.loads = 0;
     this.playRejects = false;
   }
-  load() { this.loads++; }
+  load() {
+    this.loads++;
+    if (!this.paused) { this.paused = true; this.dispatch('pause'); }
+  }
   play() {
-    if (this.playRejects) return Promise.reject(new Error('blocked'));
-    this.paused = false;
+    if (this.playRejects) return Promise.reject(new Error('NotAllowedError'));
+    if (this.paused) { this.paused = false; this.dispatch('play'); }
     return Promise.resolve();
   }
-  pause() { this.paused = true; }
+  pause() {
+    if (!this.paused) { this.paused = true; this.dispatch('pause'); }
+  }
 }
 
 /** The handful of elements index.html declares, rebuilt without a parser. */

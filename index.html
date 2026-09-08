@@ -42,8 +42,15 @@ toneContext=context;sfxGain=bus;tones=built}
 catch(error){try{context&&context.close&&context.close()}catch(ignored){}toneContext=null;sfxGain=null;tones=[]}}
 // audioStarted describes a live context, not an attempt, so a later gesture can retry.
 function unlockAudio(){if(audioStarted)return;startNodeTones();applyLevels();audioStarted=!!toneContext}
-function startMusic(){unlockAudio();music.volume=Number(volume.value)*MUSIC_SCALE;music.muted=false;music.load();music.play().then(()=>{soundButton.textContent='❚❚';soundButton.setAttribute('aria-label','Pause music')}).catch(()=>{soundButton.textContent='▶'})}
-function toggleMusic(){if(music.paused)startMusic();else{music.pause();soundButton.textContent='▶';soundButton.setAttribute('aria-label','Play music')}}
+// One owner of playback intent: musicChosen is set the moment the viewer expresses
+// one, so a later unlock gesture never overrides a deliberate pause.
+let musicChosen=false;
+function paintMusicButton(){let playing=!music.paused;soundButton.textContent=playing?'❚❚':'▶';soundButton.setAttribute('aria-label',playing?'Pause music':'Play music')}
+function startMusic(){unlockAudio();music.volume=Number(volume.value)*MUSIC_SCALE;music.muted=false;music.load();music.play().then(paintMusicButton,paintMusicButton)}
+function toggleMusic(){musicChosen=true;if(music.paused)startMusic();else music.pause();paintMusicButton()}
+music.addEventListener('play',paintMusicButton);music.addEventListener('pause',paintMusicButton);
+// Pressing the button is itself the choice, so the shared first-gesture start stands aside.
+soundButton.addEventListener('pointerdown',()=>{musicChosen=true});
 soundButton.addEventListener('click',toggleMusic);volume.addEventListener('input',()=>{music.volume=Number(volume.value)*MUSIC_SCALE;if(music.volume>0)music.muted=false});sfxVolume.addEventListener('input',()=>{if(sfxGain)sfxGain.gain.setTargetAtTime(Number(sfxVolume.value)*SFX_SCALE,toneContext.currentTime,.02)});voicesVolume.addEventListener('input',()=>{if(Number(voicesVolume.value)===0)cancelSpeech()});
 const SETTINGS_KEY='small-lights:settings',SLIDERS=[volume,voicesVolume,sfxVolume];
 function applyLevels(){music.volume=Number(volume.value)*MUSIC_SCALE;if(sfxGain)sfxGain.gain.setTargetAtTime(Number(sfxVolume.value)*SFX_SCALE,toneContext.currentTime,.02);SLIDERS.forEach(input=>{input.style.setProperty('--fill',`${Number(input.value)*100}%`);let out=input.nextElementSibling;if(out&&out.classList.contains('pct'))out.value=`${Math.round(Number(input.value)*100)}%`})}
@@ -59,8 +66,10 @@ addEventListener('pointerdown',event=>{if(!summonMenu.contains(event.target))sum
 
 help.addEventListener('click',()=>hint.classList.toggle('gone'));
 
-addEventListener('pointerdown',()=>{unlockAudio();if(music.paused)startMusic()},{once:true});addEventListener('keydown',event=>{if(event.key==='Escape')selectedEvent=null;if(event.key==='Escape'&&selected){selected=null;selection=[];spokenLines.clear();showSelectionCard();cancelSpeech();activeSpeech=0;pendingSpeech=0;activeCaptions.clear()}});
-addEventListener('keydown',()=>{unlockAudio();if(music.paused)startMusic()},{once:true});
+// Either kind of first gesture unlocks audio; only the first undecided one starts music.
+function firstGesture(){unlockAudio();if(musicChosen)return;musicChosen=true;startMusic()}
+addEventListener('pointerdown',firstGesture);addEventListener('keydown',firstGesture);
+addEventListener('keydown',event=>{if(event.key==='Escape')selectedEvent=null;if(event.key==='Escape'&&selected){selected=null;selection=[];spokenLines.clear();showSelectionCard();cancelSpeech();activeSpeech=0;pendingSpeech=0;activeCaptions.clear()}});
 function pointerPosition(event){let r=c.getBoundingClientRect();mouseX=event.clientX-r.left-camX;mouseY=event.clientY-r.top-camY}
 const TRAITS={steady:{label:'Steady',about:'Slow to change, and hard to shake once settled.'},volatile:{label:'Volatile',about:'Feels everything at full volume, and turns quickly.'},overloaded:{label:'Easily overwhelmed',about:'Crowds cost more than they give, and recovery takes solitude.'},focused:{label:'Single-minded',about:'Bonds deeply with one at a time, and holds on far longer.'},restless:{label:'Restless',about:'Cannot stay still, and does not try to.'},rhythmic:{label:'Self-regulating',about:'Moves and feels in repeating patterns that steady them.'},withdrawn:{label:'Drained by company',about:'Refills alone, and empties among others.'}};
 const TRAIT_KEYS=['steady','volatile','overloaded','focused','restless','rhythmic','withdrawn'];
