@@ -344,7 +344,7 @@ async function runEngine(name, launcher, url) {
     const ordered = head.headings.every((level, at) => at === 0 ? level === 1 : level <= head.headings[at - 1] + 1);
     check(name, 'the page describes itself to crawlers and previews',
       head.lang === 'en' && head.title && head.h1.length === 1 && ordered
-      && /^https:\/\/small-lights\.martonpaulo\.com\/$/.test(head.canonical)
+      && /^https:\/\/lights\.martonpaulo\.com\/$/.test(head.canonical)
       && head.description && head.themeColor
       && /\.png$/.test(head.ogImage) && head.ogType === 'image/png'
       && head.ogWidth === '1200' && head.ogHeight === '630' && head.ogAlt
