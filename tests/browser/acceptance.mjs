@@ -48,6 +48,7 @@ function serve() {
 }
 
 const results = [];
+const environment = new Set();
 function check(engine, name, passed, detail = '') {
   results.push({ engine, name, passed, detail });
   process.stdout.write(`${passed ? '  ok  ' : '  FAIL'} ${engine} · ${name}${detail ? ` — ${detail}` : ''}\n`);
@@ -78,6 +79,9 @@ async function open(browser, url, options = {}) {
     // Reading pixels back is how these checks see the field; the browser's advice
     // about willReadFrequently is aimed at the probe, not at the page.
     if (/willReadFrequently/.test(message.text())) return;
+    // A runner without an MP3 decoder cannot play the ambient track. That is the
+    // machine's limitation, not the page's, and it is reported once at the end.
+    if (/space-ambient-mix\.mp3|MEDIASINK|could not be decoded/i.test(message.text())) { environment.add('no MP3 decoder on this machine'); return; }
     if (message.type() === 'error' || message.type() === 'warning') problems.push(`${message.type()}: ${message.text()}`);
   });
   if (options.initScript) await page.addInitScript(options.initScript);
@@ -254,35 +258,44 @@ async function runEngine(name, launcher, url) {
   }
 
   // 8. Reduced motion stills the decoration without stopping the world.
+  // Pixel churn is too noisy on a machine without a GPU, so the two things the
+  // preference actually controls are read straight off the drawing calls: the
+  // camera offset and where the film grain is laid down.
   {
-    const churn = {};
-    for (const motion of ['reduce', 'no-preference']) {
-      const { page } = await open(browser, url, { reducedMotion: motion });
-      churn[motion] = Number(await page.evaluate(() => new Promise((resolve) => {
-        const canvas = document.querySelector('#c');
-        const context = canvas.getContext('2d', { willReadFrequently: true });
-        const box = [Math.round(canvas.width * 0.2), Math.round(canvas.height * 0.2),
-          Math.round(canvas.width * 0.6), Math.round(canvas.height * 0.6)];
-        const frames = [];
-        const tick = () => {
-          frames.push(context.getImageData(...box).data);
-          if (frames.length < 8) requestAnimationFrame(tick);
-          else {
-            let total = 0;
-            for (let f = 1; f < frames.length; f++) {
-              let sum = 0;
-              for (let at = 0; at < frames[f].length; at += 4) sum += Math.abs(frames[f][at] - frames[f - 1][at]);
-              total += sum / (frames[f].length / 4);
-            }
-            resolve((total / (frames.length - 1)).toFixed(4));
-          }
-        };
-        requestAnimationFrame(tick);
-      })));
+    const watch = () => {
+      const proto = CanvasRenderingContext2D.prototype;
+      const setTransform = proto.setTransform;
+      const translate = proto.translate;
+      window.__camera = [];
+      window.__grain = [];
+      proto.setTransform = function (a, b, c, d, e, f) {
+        if (arguments.length === 6 && a === 1 && b === 0 && c === 0 && d === 1) window.__camera.push([e, f]);
+        return setTransform.apply(this, arguments);
+      };
+      proto.translate = function (x, y) {
+        if (x <= 0 && y <= 0) window.__grain.push(`${x},${y}`);
+        return translate.apply(this, arguments);
+      };
+    };
+    const sample = async (motion) => {
+      const { page, problems } = await open(browser, url, { reducedMotion: motion, initScript: watch });
+      await page.waitForTimeout(1500);
+      const seen = await page.evaluate(() => ({ camera: window.__camera, grain: [...new Set(window.__grain)] }));
       await page.close();
-    }
-    check(name, 'reduced motion quietens the field', churn.reduce < churn['no-preference'],
-      `per-frame change ${churn.reduce} vs ${churn['no-preference']}`);
+      return {
+        drifted: seen.camera.some(([x, y]) => Math.abs(x) > 0.001 || Math.abs(y) > 0.001),
+        grainPlaces: seen.grain.length,
+        frames: seen.camera.length,
+        problems: problems.length,
+      };
+    };
+    const calm = await sample('reduce');
+    const lively = await sample('no-preference');
+    check(name, 'reduced motion stills the camera and the grain',
+      calm.frames > 0 && !calm.drifted && calm.grainPlaces <= 1
+      && lively.drifted && lively.grainPlaces > 1 && calm.problems === 0 && lively.problems === 0,
+      `reduce: drift=${calm.drifted} grainPlaces=${calm.grainPlaces} over ${calm.frames} frames; `
+      + `ordinary: drift=${lively.drifted} grainPlaces=${lively.grainPlaces} over ${lively.frames} frames`);
   }
 
   await browser.close();
@@ -303,6 +316,7 @@ try {
   await site.close();
 }
 
+if (environment.size) process.stdout.write(`\nenvironment: ${[...environment].join('; ')}\n`);
 const failed = results.filter((result) => !result.passed);
 process.stdout.write(`\n${results.length - failed.length}/${results.length} checks passed\n`);
 if (failed.length) {
