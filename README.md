@@ -32,9 +32,9 @@ happened to it.
 | Gesture | What it does |
 | --- | --- |
 | Click a light | Selects it and lets it speak |
-| Ctrl or Cmd + click | Holds a second one; the two answer each other |
+| Cmd + click (Ctrl + click on Windows and Linux) | Holds a second one; the two answer each other |
 | Click empty space | Detonates there — click again to stack the blast |
-| Right-click | Summons a comet, a portal pair or an attractor at that point |
+| Right-click (Ctrl + click on macOS) | Summons a comet, a portal pair or an attractor at that point |
 | Drag | Moves a light or a summon |
 | Escape | Clears the selection |
 

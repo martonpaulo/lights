@@ -18,7 +18,7 @@ const EXPOSED = [
   'n', 'e', 't', 'events', 'bombs', 'selection', 'selected', 'audioStarted',
   'toneContext', 'availableVoices', 'eventLabel', 'encounters', 'affinity', 'regard',
   'camX', 'camY', 'activeSpeech', 'pendingSpeech', 'speakQueue', 'selectedEvent',
-  'dragged', 'draggedEvent', 'bonds', 'blastStack', 'musicChosen', 'calm',
+  'dragged', 'draggedEvent', 'bonds', 'blastStack', 'musicChosen', 'calm', 'lastCaption',
 ];
 
 const FUNCTIONS = [
@@ -26,7 +26,7 @@ const FUNCTIONS = [
   'loadVoices', 'unlockAudio', 'startMusic', 'toggleMusic', 'dropBomb', 'spawnComet',
   'spawnPortals', 'spawnAttractor', 'updateEvents', 'announceEvent', 'learningPass',
   'socialPass', 'clearBonds', 'pairForces', 'simulationStep', 'lifeStage',
-  'converse', 'runQueue', 'endSpeechSession',
+  'converse', 'runQueue', 'endSpeechSession', 'replyPartner',
 ];
 
 export function readPage() {

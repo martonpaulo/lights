@@ -19,6 +19,8 @@ const MIXED = [
 function speakFirst(field) {
   field.frame(10);
   const target = field.livingNodes()[0];
+  field.press(target); // only a selected light speaks
+  field.speech.spoken.length = 0;
   field.field.fn.speakNode(target, 'A written line for the record.', true);
   return target;
 }
