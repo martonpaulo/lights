@@ -26,6 +26,7 @@ const FUNCTIONS = [
   'loadVoices', 'unlockAudio', 'startMusic', 'toggleMusic', 'dropBomb', 'spawnComet',
   'spawnPortals', 'spawnAttractor', 'updateEvents', 'announceEvent', 'learningPass',
   'socialPass', 'clearBonds', 'pairForces', 'simulationStep', 'lifeStage',
+  'converse', 'runQueue', 'endSpeechSession',
 ];
 
 export function readPage() {

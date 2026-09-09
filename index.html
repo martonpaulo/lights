@@ -72,7 +72,7 @@ help.addEventListener('click',()=>hint.classList.toggle('gone'));
 // Either kind of first gesture unlocks audio; only the first undecided one starts music.
 function firstGesture(){unlockAudio();if(musicChosen)return;musicChosen=true;startMusic()}
 addEventListener('pointerdown',firstGesture);addEventListener('keydown',firstGesture);
-addEventListener('keydown',event=>{if(event.key==='Escape')selectedEvent=null;if(event.key==='Escape'&&selected){selected=null;selection=[];spokenLines.clear();showSelectionCard();cancelSpeech();activeSpeech=0;pendingSpeech=0;activeCaptions.clear()}});
+addEventListener('keydown',event=>{if(event.key!=='Escape')return;selectedEvent=null;if(!selected&&!selection.length)return;selected=null;selection=[];spokenLines.clear();endSpeechSession();captionUntil=0;showSelectionCard()});
 function pointerPosition(event){let r=c.getBoundingClientRect();mouseX=event.clientX-r.left-camX;mouseY=event.clientY-r.top-camY}
 const TRAITS={steady:{label:'Steady',about:'Slow to change, and hard to shake once settled.'},volatile:{label:'Volatile',about:'Feels everything at full volume, and turns quickly.'},overloaded:{label:'Easily overwhelmed',about:'Crowds cost more than they give, and recovery takes solitude.'},focused:{label:'Single-minded',about:'Bonds deeply with one at a time, and holds on far longer.'},restless:{label:'Restless',about:'Cannot stay still, and does not try to.'},rhythmic:{label:'Self-regulating',about:'Moves and feels in repeating patterns that steady them.'},withdrawn:{label:'Drained by company',about:'Refills alone, and empties among others.'}};
 const TRAIT_KEYS=['steady','volatile','overloaded','focused','restless','rhythmic','withdrawn'];
@@ -185,18 +185,25 @@ function replyPartner(node){let index=n.indexOf(node),partner=node.twin!=null?n[
 if(!partner||partner.absent||partner.twin!==index){let best=null,close=260;
 n.forEach(other=>{if(other===node||other.absent)return;let d=Math.hypot(other.x-node.x,other.y-node.y);if(d<close){close=d;best=other}});partner=best}
 return partner}
+// A speech session covers one continuous conversation. Ending it bumps the
+// generation, so every delayed clause, reply and queued speaker from the old one
+// finds itself stale and does nothing.
+let speechSession=0;
+function endSpeechSession(){speechSession++;cancelSpeech();if(activeChain)activeChain.stop();activeChain=null;clearTimeout(conversationTimer);conversationTimer=null;pendingReply=null;speakQueue.length=0;activeSpeech=0;pendingSpeech=0;activeCaptions.clear()}
 function converse(node,depth){let partner=replyPartner(node);if(!partner)return;
-let line=Math.random()<.45?REPLIES[Math.floor(Math.random()*REPLIES.length)]:null;
-conversationTimer=setTimeout(()=>{if(selected!==node&&selected!==partner)return;
+let line=Math.random()<.45?REPLIES[Math.floor(Math.random()*REPLIES.length)]:null,session=speechSession;
+conversationTimer=setTimeout(()=>{if(session!==speechSession)return;if(selected!==node&&selected!==partner)return;
 if(speakNode(partner,line,true)&&depth<2)pendingReply={node:partner,depth:depth+1}},700+Math.random()*900)}
-function runQueue(){if(activeSpeech||pendingSpeech||!speakQueue.length)return;let next=speakQueue.shift();if(next&&!next.absent)speakNode(next)}
+function runQueue(){if(activeSpeech||pendingSpeech||!speakQueue.length)return;let next=speakQueue.shift();if(next&&!next.absent&&selection.includes(next))speakNode(next)}
 
 function clauses(text){let parts=text.split(/(?<=[,.;:?!…])\s+/).filter(Boolean),split=[];
 parts.forEach(part=>{if(part.length>58){let at=part.search(/\s(and|but|because|which|though|so|yet|until|while)\s/i);if(at>18&&part.length-at>18){split.push(part.slice(0,at));split.push(part.slice(at+1));return}}split.push(part)});
 let merged=[];split.forEach(part=>{if(merged.length&&(part.length<11||merged[merged.length-1].length<11))merged[merged.length-1]+=' '+part;else merged.push(part)});
 return merged.length?merged:[text]}
-function speakChain(node,text,tone,done,voiceRef){let parts=clauses(text),index=0,cancelled=false;
-function next(){if(cancelled||index>=parts.length){done&&done();return}
+function speakChain(node,text,tone,done,voiceRef){let parts=clauses(text),index=0,stopped=false,session=speechSession;
+let live=()=>!stopped&&session===speechSession;
+function finish(){if(!live())return;stopped=true;done&&done()}
+function next(){if(!live())return;if(index>=parts.length){finish();return}
 let part=parts[index],last=index===parts.length-1,
 utter=new SpeechSynthesisUtterance(part);
 utter.voice=voiceRef;utter.lang=voiceRef.lang;
@@ -204,13 +211,13 @@ utter.voice=voiceRef;utter.lang=voiceRef.lang;
 utter.pitch=Math.max(.88,Math.min(1.12,tone.pitch+(Math.random()-.45)*.05+(index?-.012*index:0)));
 utter.rate=Math.max(.8,Math.min(1.1,tone.rate+(Math.random()-.5)*.05-(last?.03:0)));if(last&&/\?$/.test(part))utter.pitch=Math.min(1.14,utter.pitch+.05);
 utter.volume=Number(voicesVolume.value);
-utter.onend=()=>{index++;let gap=/[.?!…]$/.test(part)?190+Math.random()*160:90+Math.random()*110;setTimeout(next,last?0:gap)};
-utter.onerror=event=>{if(event&&event.error&&event.error!=='interrupted'&&event.error!=='canceled')console.warn('speech failed:',event.error);cancelled=true;done&&done()};
+utter.onend=()=>{if(!live())return;index++;let gap=/[.?!…]$/.test(part)?190+Math.random()*160:90+Math.random()*110;setTimeout(next,last?0:gap)};
+utter.onerror=event=>{if(event&&event.error&&event.error!=='interrupted'&&event.error!=='canceled')console.warn('speech failed:',event.error);finish()};
 speechSynthesis.speak(utter);speechSynthesis.resume()}
-next();return{stop(){cancelled=true}}}
+next();return{stop(){stopped=true}}}
 // Holds a written line on screen for about as long as saying it would take.
-function readingPause(text,done){let timer=setTimeout(done,900+text.length*55);return{stop(){clearTimeout(timer)}}}
-function speakNode(node,forced,interrupt){if(interrupt){if(speechBusy())cancelSpeech();if(activeChain)activeChain.stop();clearTimeout(conversationTimer);pendingReply=null;activeSpeech=0;pendingSpeech=0;activeCaptions.clear()}else if(activeSpeech+pendingSpeech>=1)return false;let pool=phrasesFor(node),line=forced||(Math.random()<.38?contextPhrase(node):null),raw=line||pool[Math.floor(Math.random()*pool.length)],tone=toneOf(raw,node),text=humanize(raw,node,tone),id=++speechId;lastCaption={name:node.personality,node,text,tone:tone.key};activeCaptions.set(id,lastCaption);spokenLines.set(node,lastCaption);renderCaptions();captionUntil=Date.now()+3000+text.length*70;activeSpeech++;lastSpokeAt=Date.now();let finish=()=>{lastSpokeAt=Date.now();activeSpeech=Math.max(0,activeSpeech-1);activeCaptions.delete(id);renderCaptions();let follow=pendingReply;pendingReply=null;if(speakQueue.length){setTimeout(runQueue,420);return}if(follow&&selected)converse(follow.node,follow.depth);else if(!follow&&selected===node&&Math.random()<.55)converse(node,0)};let voiceRef=SPEECH_READY?pickVoice(node):null;
+function readingPause(text,done){let session=speechSession,timer=setTimeout(()=>{if(session===speechSession)done&&done()},900+text.length*55);return{stop(){clearTimeout(timer)}}}
+function speakNode(node,forced,interrupt){if(interrupt)endSpeechSession();else if(activeSpeech+pendingSpeech>=1)return false;let session=speechSession;let pool=phrasesFor(node),line=forced||(Math.random()<.38?contextPhrase(node):null),raw=line||pool[Math.floor(Math.random()*pool.length)],tone=toneOf(raw,node),text=humanize(raw,node,tone),id=++speechId;lastCaption={name:node.personality,node,text,tone:tone.key};activeCaptions.set(id,lastCaption);spokenLines.set(node,lastCaption);renderCaptions();captionUntil=Date.now()+3000+text.length*70;activeSpeech++;lastSpokeAt=Date.now();let finish=()=>{if(session!==speechSession)return;lastSpokeAt=Date.now();activeSpeech=Math.max(0,activeSpeech-1);activeCaptions.delete(id);renderCaptions();activeChain=null;let follow=pendingReply;pendingReply=null;if(speakQueue.length){setTimeout(()=>{if(session===speechSession)runQueue()},420);return}if(follow&&selected)converse(follow.node,follow.depth);else if(!follow&&selected===node&&Math.random()<.55)converse(node,0)};let voiceRef=SPEECH_READY?pickVoice(node):null;
 activeChain=voiceRef?speakChain(node,text,tone,finish,voiceRef):readingPause(text,finish);return true}
 function eventHandleAt(px,py){for(let i=events.length-1;i>=0;i--){let item=events[i];if(item.type==='comet'&&Math.hypot(item.x-px,item.y-py)<44)return{item,part:'body'};if(item.type==='attractor'&&Math.hypot(item.x-px,item.y-py)<46)return{item,part:'body'};if(item.type==='portal'){if(Math.hypot(item.a.x-px,item.a.y-py)<item.r+8)return{item,part:'a'};if(Math.hypot(item.b.x-px,item.b.y-py)<item.r+8)return{item,part:'b'}}}return null}
 function eventPoint(hit){return hit.part==='body'?hit.item:hit.item[hit.part]}
@@ -219,7 +226,7 @@ c.addEventListener('pointerdown',event=>{
 // Only the primary contact acts on the field. A secondary mouse press belongs to
 // the context menu; touch and pen report button 0 for their primary contact.
 if(event.button!==0)return;
-pointerPosition(event);let hit=eventHandleAt(mouseX,mouseY);if(hit){selectedEvent=hit.item;draggedEvent=hit;dragged=null;let point=eventPoint(hit);hit.offsetX=point.x-mouseX;hit.offsetY=point.y-mouseY;c.setPointerCapture(event.pointerId);return}selectedEvent=null;let alive=n.filter(node=>!node.absent);if(!alive.length)return;let nearest=alive.reduce((closest,node)=>Math.hypot(node.x-mouseX,node.y-mouseY)<Math.hypot(closest.x-mouseX,closest.y-mouseY)?node:closest,alive[0]),distance=Math.hypot(nearest.x-mouseX,nearest.y-mouseY);if(distance<48){let additive=event.ctrlKey||event.metaKey,already=selection.includes(nearest);if(additive){if(already){if(selection.length>1){spokenLines.delete(nearest);selection=selection.filter(node=>node!==nearest);selected=selection[selection.length-1];showSelectionCard()}dragged=null;return}selection=[...selection,nearest].slice(-2);selected=nearest;speakQueue.push(nearest);runQueue()}else{if(selection.length>1||selection[0]!==nearest)spokenLines.clear();selection=[nearest];if(selected!==nearest||!speechBusy()){selected=nearest;speakQueue.length=0;speakNode(nearest,null,true)}selected=nearest}dragged=nearest;showSelectionCard();c.setPointerCapture(event.pointerId);dragged.dragOffsetX=dragged.x-mouseX;dragged.dragOffsetY=dragged.y-mouseY;dragged.targetX=dragged.x;dragged.targetY=dragged.y}else{dragged=null;let now=Date.now();if(now-blastAt<1400&&Math.hypot(mouseX-blastX,mouseY-blastY)<140)blastStack=Math.min(9,blastStack+1);else blastStack=0;blastAt=now;blastX=mouseX;blastY=mouseY;dropBomb(mouseX,mouseY,Math.min(1,.12+blastStack*.11))}});
+pointerPosition(event);let hit=eventHandleAt(mouseX,mouseY);if(hit){selectedEvent=hit.item;draggedEvent=hit;dragged=null;let point=eventPoint(hit);hit.offsetX=point.x-mouseX;hit.offsetY=point.y-mouseY;c.setPointerCapture(event.pointerId);return}selectedEvent=null;let alive=n.filter(node=>!node.absent);if(!alive.length)return;let nearest=alive.reduce((closest,node)=>Math.hypot(node.x-mouseX,node.y-mouseY)<Math.hypot(closest.x-mouseX,closest.y-mouseY)?node:closest,alive[0]),distance=Math.hypot(nearest.x-mouseX,nearest.y-mouseY);if(distance<48){let additive=event.ctrlKey||event.metaKey,already=selection.includes(nearest);if(additive){if(already){if(selection.length>1){spokenLines.delete(nearest);selection=selection.filter(node=>node!==nearest);selected=selection[selection.length-1];showSelectionCard()}dragged=null;return}selection=[...selection,nearest].slice(-2);selected=nearest;speakQueue.push(nearest);runQueue()}else{if(selection.length>1||selection[0]!==nearest)spokenLines.clear();selection=[nearest];if(selected!==nearest||!speechBusy()){selected=nearest;speakNode(nearest,null,true)}selected=nearest}dragged=nearest;showSelectionCard();c.setPointerCapture(event.pointerId);dragged.dragOffsetX=dragged.x-mouseX;dragged.dragOffsetY=dragged.y-mouseY;dragged.targetX=dragged.x;dragged.targetY=dragged.y}else{dragged=null;let now=Date.now();if(now-blastAt<1400&&Math.hypot(mouseX-blastX,mouseY-blastY)<140)blastStack=Math.min(9,blastStack+1);else blastStack=0;blastAt=now;blastX=mouseX;blastY=mouseY;dropBomb(mouseX,mouseY,Math.min(1,.12+blastStack*.11))}});
 
 function positionSelectionCard(){}
 c.addEventListener('pointermove',event=>{pointerPosition(event);if(draggedEvent){let point=eventPoint(draggedEvent),nx=mouseX+draggedEvent.offsetX,ny=mouseY+draggedEvent.offsetY;if(draggedEvent.item.type==='comet'){let speed=Math.hypot(draggedEvent.item.vx,draggedEvent.item.vy),dx=nx-point.x,dy=ny-point.y,d=Math.hypot(dx,dy);if(d>.6){draggedEvent.item.vx=dx/d*speed;draggedEvent.item.vy=dy/d*speed}draggedEvent.item.tail.length=0}point.x=nx;point.y=ny;return}if(dragged){dragged.targetX=mouseX+dragged.dragOffsetX;dragged.targetY=mouseY+dragged.dragOffsetY;dragged.vx=0;dragged.vy=0}});
