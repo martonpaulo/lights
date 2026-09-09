@@ -101,8 +101,8 @@ n.forEach(node=>{if(node.voiceRef&&!availableVoices.includes(node.voiceRef))node
 const STAGES=['young','grown','older','elder'];
 function creditFor(node){return `${node.name} · ${Math.floor(node.age)}`}
 function paintCaption(){caption.textContent='';let spoken=[...activeCaptions.values()],shown=[];
-selection.forEach(node=>{shown.push({node,line:spokenLines.get(node)||null})});
-if(!selection.length&&spoken.length)shown=spoken.slice(-2).map(entry=>({node:entry.node,line:entry}));
+selection.forEach(node=>{if(!node.absent)shown.push({node,line:spokenLines.get(node)||null})});
+if(!shown.length&&spoken.length)shown=spoken.filter(entry=>!entry.node||!entry.node.absent).slice(-2).map(entry=>({node:entry.node,line:entry}));
 if(!shown.length){caption.classList.remove('visible');return}
 shown.slice(-2).forEach(entry=>{let row=document.createElement('div');row.className='line';
 let name=document.createElement('strong');name.textContent=entry.node?entry.node.personality:entry.line.name;row.append(name);
@@ -131,6 +131,19 @@ node.personality=pick[0];node.phrase=pick[1];node.about=pick[2];node.shiftAt=Dat
 // Every per-life and transient field a light owns. The first cast and every
 // replacement both come through here, so an aged or in-flight value can never
 // carry into a new life. Slot identity — size, hub flag — stays with the caller.
+// A slot that has gone dark takes no further part until a new life arrives:
+// it leaves the selection, its line stops, its turn in the queue is dropped and
+// nothing holds it any more. Its tone is muted by the simulation step.
+function withdrawLight(node){
+if(speakingNode===node)endSpeechSession();
+speakQueue=speakQueue.filter(item=>item!==node);
+for(let[id,entry]of activeCaptions)if(entry.node===node)activeCaptions.delete(id);
+spokenLines.delete(node);
+selection=selection.filter(item=>item!==node);
+if(selected===node)selected=selection[selection.length-1]||null;
+if(dragged===node)dragged=null;
+if(lastCaption&&lastCaption.node===node)lastCaption=null;
+showSelectionCard()}
 function freshLife(node){
 node.mood=0;node.shiftAt=0;node.friend=null;node.rival=null;node.reputation=0;node.regardIn=0;
 node.stage=0;node.dying=0;node.absent=0;node.fade=0;node.boost=0;node.portalCooldown=0;node.edgeContact=false;
@@ -156,7 +169,7 @@ if(dragged===node)dragged=null;spokenLines.delete(node);
 selection=selection.filter(item=>item!==node);if(selected===node)selected=selection[selection.length-1]||null;
 agePersona(node);showSelectionCard()}
 function ageField(){n.forEach((node,index)=>{
-if(node.absent){node.absent-=1;if(node.absent<=0){node.absent=0;reborn(node,index);announceEvent(`${node.name} has just arrived.`)}return}if(node.dying){node.fade=Math.min(1,node.fade+.16);if(node.fade>=1){announceEvent(`${node.name} is gone, after ${Math.floor(node.age)} years.`);clearBonds(index);node.absent=6+Math.floor(Math.random()*22);node.twin=null}return}
+if(node.absent){node.absent-=1;if(node.absent<=0){node.absent=0;reborn(node,index);announceEvent(`${node.name} has just arrived.`)}return}if(node.dying){node.fade=Math.min(1,node.fade+.16);if(node.fade>=1){announceEvent(`${node.name} is gone, after ${Math.floor(node.age)} years.`);clearBonds(index);node.absent=6+Math.floor(Math.random()*22);node.twin=null;withdrawLight(node)}return}
 node.age+=1/14;if(t>node.lumenNext){node.lumenTo=.45+Math.random()*.95;node.lumenNext=t+120+Math.random()*400}node.lumen+=(node.lumenTo-node.lumen)*.012;
 let stage=lifeStage(node.age);
 if(stage!==node.stage){node.stage=stage;
@@ -187,8 +200,8 @@ function replyPartner(node){return selection.find(other=>other!==node&&!other.ab
 // A speech session covers one continuous conversation. Ending it bumps the
 // generation, so every delayed clause, reply and queued speaker from the old one
 // finds itself stale and does nothing.
-let speechSession=0;
-function endSpeechSession(){speechSession++;cancelSpeech();if(activeChain)activeChain.stop();activeChain=null;clearTimeout(conversationTimer);conversationTimer=null;pendingReply=null;speakQueue.length=0;activeSpeech=0;pendingSpeech=0;activeCaptions.clear()}
+let speechSession=0,speakingNode=null;
+function endSpeechSession(){speechSession++;speakingNode=null;cancelSpeech();if(activeChain)activeChain.stop();activeChain=null;clearTimeout(conversationTimer);conversationTimer=null;pendingReply=null;speakQueue.length=0;activeSpeech=0;pendingSpeech=0;activeCaptions.clear()}
 function converse(node,depth){let partner=replyPartner(node);if(!partner)return;
 let line=Math.random()<.45?REPLIES[Math.floor(Math.random()*REPLIES.length)]:null,session=speechSession;
 conversationTimer=setTimeout(()=>{if(session!==speechSession)return;if(selected!==node&&selected!==partner)return;
@@ -216,7 +229,7 @@ speechSynthesis.speak(utter);speechSynthesis.resume()}
 next();return{stop(){stopped=true}}}
 // Holds a written line on screen for about as long as saying it would take.
 function readingPause(text,done){let session=speechSession,timer=setTimeout(()=>{if(session===speechSession)done&&done()},900+text.length*55);return{stop(){clearTimeout(timer)}}}
-function speakNode(node,forced,interrupt){if(!selection.includes(node))return false;if(interrupt)endSpeechSession();else if(activeSpeech+pendingSpeech>=1)return false;let session=speechSession;let pool=phrasesFor(node),line=forced||(Math.random()<.38?contextPhrase(node):null),raw=line||pool[Math.floor(Math.random()*pool.length)],tone=toneOf(raw,node),text=humanize(raw,node,tone),id=++speechId;lastCaption={name:node.personality,node,text,tone:tone.key};activeCaptions.set(id,lastCaption);spokenLines.set(node,lastCaption);renderCaptions();captionUntil=Date.now()+3000+text.length*70;activeSpeech++;lastSpokeAt=Date.now();let finish=()=>{if(session!==speechSession)return;lastSpokeAt=Date.now();activeSpeech=Math.max(0,activeSpeech-1);activeCaptions.delete(id);renderCaptions();activeChain=null;let follow=pendingReply;pendingReply=null;if(speakQueue.length){setTimeout(()=>{if(session===speechSession)runQueue()},420);return}if(follow&&selected)converse(follow.node,follow.depth);else if(!follow&&selected===node&&Math.random()<.55)converse(node,0)};let voiceRef=SPEECH_READY?pickVoice(node):null;
+function speakNode(node,forced,interrupt){if(node.absent||!selection.includes(node))return false;if(interrupt)endSpeechSession();else if(activeSpeech+pendingSpeech>=1)return false;let session=speechSession;let pool=phrasesFor(node),line=forced||(Math.random()<.38?contextPhrase(node):null),raw=line||pool[Math.floor(Math.random()*pool.length)],tone=toneOf(raw,node),text=humanize(raw,node,tone),id=++speechId;lastCaption={name:node.personality,node,text,tone:tone.key};activeCaptions.set(id,lastCaption);spokenLines.set(node,lastCaption);renderCaptions();captionUntil=Date.now()+3000+text.length*70;activeSpeech++;speakingNode=node;lastSpokeAt=Date.now();let finish=()=>{if(session!==speechSession)return;lastSpokeAt=Date.now();speakingNode=null;activeSpeech=Math.max(0,activeSpeech-1);activeCaptions.delete(id);renderCaptions();activeChain=null;let follow=pendingReply;pendingReply=null;if(speakQueue.length){setTimeout(()=>{if(session===speechSession)runQueue()},420);return}if(follow&&selected)converse(follow.node,follow.depth);else if(!follow&&selected===node&&Math.random()<.55)converse(node,0)};let voiceRef=SPEECH_READY?pickVoice(node):null;
 activeChain=voiceRef?speakChain(node,text,tone,finish,voiceRef):readingPause(text,finish);return true}
 function eventHandleAt(px,py){for(let i=events.length-1;i>=0;i--){let item=events[i];if(item.type==='comet'&&Math.hypot(item.x-px,item.y-py)<44)return{item,part:'body'};if(item.type==='attractor'&&Math.hypot(item.x-px,item.y-py)<46)return{item,part:'body'};if(item.type==='portal'){if(Math.hypot(item.a.x-px,item.a.y-py)<item.r+8)return{item,part:'a'};if(Math.hypot(item.b.x-px,item.b.y-py)<item.r+8)return{item,part:'b'}}}return null}
 function eventPoint(hit){return hit.part==='body'?hit.item:hit.item[hit.part]}
@@ -406,7 +419,7 @@ let gained=Math.min(2.4,speed*1.9+.35);a.vx=Math.cos(angle)*gained;a.vy=Math.sin
 portalPass()});
 if(event.age>event.life)events.splice(i,1);continue}
 if(event.type==='attractor'){let strength=Math.min(1,event.age/1.6)*.055;
-n.forEach(a=>{let dx=event.x-a.x,dy=event.y-a.y,d=Math.max(30,Math.hypot(dx,dy)),force=strength*(1-Math.min(1,d/Math.max(w,h)));a.vx+=dx/d*force;a.vy+=dy/d*force;a.boost=Math.max(a.boost||0,.25)});
+n.forEach(a=>{if(a.absent)return;let dx=event.x-a.x,dy=event.y-a.y,d=Math.max(30,Math.hypot(dx,dy)),force=strength*(1-Math.min(1,d/Math.max(w,h)));a.vx+=dx/d*force;a.vy+=dy/d*force;a.boost=Math.max(a.boost||0,.25)});
 if(event.age>event.life){dropBomb(event.x,event.y,1,10);announceEvent('It let go of everything at once.');events.splice(i,1)}continue}}}
 function drawEvents(){for(let event of events){
 if(event.type==='comet'){event.tail.forEach((point,index)=>{let fade=1-index/event.tail.length;x.fillStyle=`rgba(226,236,250,${fade*fade*.22})`;x.beginPath();x.arc(point.x,point.y,1.9*fade+.25,0,7);x.fill()});
@@ -419,7 +432,8 @@ x.fillStyle=`rgba(226,236,247,${fade*.85})`;x.font='400 19px Georgia,"Times New 
 let energyTick=0,learningTick=55,clusterTick=249;
 function updateEnergy(){if(energyTick++%10)return;let kinetic=0;n.forEach(a=>{if(a.absent)return;let mass=Math.max(1,a.r*a.r);kinetic+=.5*mass*(a.vx*a.vx+a.vy*a.vy)});kineticOutput.value=kinetic.toFixed(2)}
 function simulationStep(){let w=c.clientWidth,h=c.clientHeight;t+=.08;advanceBonds();formBonds();
-n.forEach((a,i)=>{if(a.absent)return;intentions(a,i);a.vx+=Math.sin(t*.3+a.y*.008)*.0015;a.vy+=Math.cos(t*.28+a.x*.008)*.0015;if(a.trait==='rhythmic')a.wander=a.rhythmPhase+Math.sin(t*a.rhythmSpeed)*2.4;else a.wander+=(Math.random()-.5)*a.wanderTurn*(1.6-a.stability);let drive=a.wanderForce*(a.trait==='restless'?2.4:a.trait==='steady'?.5:1);a.vx+=Math.cos(a.wander)*drive;a.vy+=Math.sin(a.wander)*drive;if(a.trait==='focused'&&a.twin!=null&&n[a.twin]){let mate=n[a.twin],mdx=mate.x-a.x,mdy=mate.y-a.y,md=Math.max(40,Math.hypot(mdx,mdy));a.vx+=mdx/md*.004;a.vy+=mdy/md*.004}a.nextImpulse-=.016;if(a.nextImpulse<=0){let angle=a.wander+(Math.random()-.5)*1.4,kick=.035+Math.random()*.075;a.vx+=Math.cos(angle)*kick;a.vy+=Math.sin(angle)*kick;a.wander=angle;a.nextImpulse=3+Math.random()*16;let partner=a.twin!=null?n[a.twin]:null;if(partner&&partner.twin===i&&partner!==a){partner.vx-=Math.cos(angle)*kick*.8;partner.vy-=Math.sin(angle)*kick*.8;partner.wander=angle+Math.PI}}if(tones[i]&&c.clientWidth&&c.clientHeight){let now=toneContext.currentTime,fx=Math.max(0,Math.min(1,(a.x||0)/c.clientWidth))||0,fy=Math.max(0,Math.min(1,(a.y||0)/c.clientHeight))||0,frequency=80+fx*720,cutoff=250+(1-fy)*5000;tones[i].oscillator.frequency.setTargetAtTime(frequency,now,.06);tones[i].filter.frequency.setTargetAtTime(cutoff,now,.08)}let atEdge=a.x<=a.r+2||a.x>=c.clientWidth-a.r-2||a.y<=a.r+2||a.y>=c.clientHeight-a.r-2;if(atEdge&&!a.edgeContact)collisionPing(390+Math.min(260,Math.hypot(a.vx,a.vy)*100));a.edgeContact=atEdge});pairForces();if(++learningTick>=56){learningTick=0;learningPass()}if(++clusterTick>=250){clusterTick=0;kmeans()}updateEvents();n.forEach(a=>{a.vx*=.99;a.vy*=.99;if(a.boost)a.boost=a.boost>.01?a.boost*.985:0;let sp=Math.hypot(a.vx,a.vy),cap=.34+(a.boost||0)*3.2;if(sp>cap){a.vx=a.vx/sp*cap;a.vy=a.vy/sp*cap}});integrateMotion(w,h);advanceEchoes();updateEnergy()}
+n.forEach((a,i)=>{if(tones[i]&&toneContext)tones[i].gain.gain.setTargetAtTime(a.absent?0:.004,toneContext.currentTime,.08);
+if(a.absent)return;intentions(a,i);a.vx+=Math.sin(t*.3+a.y*.008)*.0015;a.vy+=Math.cos(t*.28+a.x*.008)*.0015;if(a.trait==='rhythmic')a.wander=a.rhythmPhase+Math.sin(t*a.rhythmSpeed)*2.4;else a.wander+=(Math.random()-.5)*a.wanderTurn*(1.6-a.stability);let drive=a.wanderForce*(a.trait==='restless'?2.4:a.trait==='steady'?.5:1);a.vx+=Math.cos(a.wander)*drive;a.vy+=Math.sin(a.wander)*drive;if(a.trait==='focused'&&a.twin!=null&&n[a.twin]){let mate=n[a.twin],mdx=mate.x-a.x,mdy=mate.y-a.y,md=Math.max(40,Math.hypot(mdx,mdy));a.vx+=mdx/md*.004;a.vy+=mdy/md*.004}a.nextImpulse-=.016;if(a.nextImpulse<=0){let angle=a.wander+(Math.random()-.5)*1.4,kick=.035+Math.random()*.075;a.vx+=Math.cos(angle)*kick;a.vy+=Math.sin(angle)*kick;a.wander=angle;a.nextImpulse=3+Math.random()*16;let partner=a.twin!=null?n[a.twin]:null;if(partner&&partner.twin===i&&partner!==a){partner.vx-=Math.cos(angle)*kick*.8;partner.vy-=Math.sin(angle)*kick*.8;partner.wander=angle+Math.PI}}if(tones[i]&&c.clientWidth&&c.clientHeight){let now=toneContext.currentTime,fx=Math.max(0,Math.min(1,(a.x||0)/c.clientWidth))||0,fy=Math.max(0,Math.min(1,(a.y||0)/c.clientHeight))||0,frequency=80+fx*720,cutoff=250+(1-fy)*5000;tones[i].oscillator.frequency.setTargetAtTime(frequency,now,.06);tones[i].filter.frequency.setTargetAtTime(cutoff,now,.08)}let atEdge=a.x<=a.r+2||a.x>=c.clientWidth-a.r-2||a.y<=a.r+2||a.y>=c.clientHeight-a.r-2;if(atEdge&&!a.edgeContact)collisionPing(390+Math.min(260,Math.hypot(a.vx,a.vy)*100));a.edgeContact=atEdge});pairForces();if(++learningTick>=56){learningTick=0;learningPass()}if(++clusterTick>=250){clusterTick=0;kmeans()}updateEvents();n.forEach(a=>{if(a.absent)return;a.vx*=.99;a.vy*=.99;if(a.boost)a.boost=a.boost>.01?a.boost*.985:0;let sp=Math.hypot(a.vx,a.vy),cap=.34+(a.boost||0)*3.2;if(sp>cap){a.vx=a.vx/sp*cap;a.vy=a.vy/sp*cap}});integrateMotion(w,h);advanceEchoes();updateEnergy()}
 setInterval(simulationStep,16);
 // prefers-reduced-motion suppresses the decoration laid over the world — camera
 // drift, wandering film grain, twinkle — and never the simulation itself.
@@ -443,7 +457,7 @@ if(!grainPattern)buildGrain();x.save();x.globalAlpha=.035;x.globalCompositeOpera
 x.translate(calm?0:-Math.random()*140,calm?0:-Math.random()*140);
 x.fillStyle=grainPattern;x.fillRect(0,0,w+140,h+140);x.restore()}
 function paintBackground(w,h){if(t>glowNext){let corner=GLOW_CORNERS[Math.floor(Math.random()*GLOW_CORNERS.length)];if(Math.hypot(corner[0]-glowToX,corner[1]-glowToY)<.3)corner=GLOW_CORNERS[(GLOW_CORNERS.indexOf(corner)+3)%GLOW_CORNERS.length];glowToX=corner[0];glowToY=corner[1];glowNext=t+140+Math.random()*160}glowX+=(glowToX-glowX)*.0016;glowY+=(glowToY-glowY)*.0016;if(!backgroundGradient||Math.abs(glowX-glowMadeX)>.004||Math.abs(glowY-glowMadeY)>.004||w!==glowMadeW||h!==glowMadeH){let cx=w*glowX,cy=h*glowY;backgroundGradient=x.createRadialGradient(cx,cy,0,cx,cy,Math.max(w,h)*.85);backgroundGradient.addColorStop(0,'#16090c');backgroundGradient.addColorStop(.42,'#09070b');backgroundGradient.addColorStop(1,'#05080d');glowMadeX=glowX;glowMadeY=glowY;glowMadeW=w;glowMadeH=h}x.globalAlpha=.55;x.fillStyle=backgroundGradient;x.fillRect(0,0,w,h);x.globalAlpha=1}
-function rs(){let r=c.getBoundingClientRect(),d=1;c.width=r.width*d;c.height=r.height*d;x.setTransform(d,0,0,d,0,0);vignette=null;if(!n.length)for(let i=0;i<personalities.length;i++){let p=personalities[i],profile=profiles[i];n.push(freshLife({x:Math.random()*r.width,y:Math.random()*r.height,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:i%5?.75+Math.random()*1.25:2.5+Math.random()*3,h:i==3,personality:p[0],phrase:p[1],lifespan:66+Math.random()*32,charge:Math.max(-1,Math.min(1,CHARGES[i]*(.55+Math.random()*.45)+(Math.random()-.5)*.2)),gravSign:CHARGES[i]<0?-1:1,trait:i%3===2?TRAIT_KEYS[Math.floor(Math.random()*TRAIT_KEYS.length)]:null,stability:.2+Math.random()*.75,sensitivity:.5+Math.random()*1.2,sociability:-1+Math.random()*2,bondedAt:-Math.random()*400,voiceSeed:i*7+3,name:profile[0],gender:profile[1],age:profile[2],about:profile[3]}))}n.forEach(node=>{node.stage=lifeStage(node.age);if(!node.absent)containLight(node,r.width,r.height)});if(!e.length&&n.length>1){e=[{a:0,b:1,age:0,life:60}];n[0].twin=1;n[1].twin=0;n[0].twinPhase=n[1].twinPhase=Math.random()*7}}
+function rs(){let r=c.getBoundingClientRect(),d=1;c.width=r.width*d;c.height=r.height*d;x.setTransform(d,0,0,d,0,0);vignette=null;if(!n.length)for(let i=0;i<personalities.length;i++){let p=personalities[i],profile=profiles[i];n.push(freshLife({x:Math.random()*r.width,y:Math.random()*r.height,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:i%5?.75+Math.random()*1.25:2.5+Math.random()*3,h:i==3,personality:p[0],phrase:p[1],lifespan:66+Math.random()*32,charge:Math.max(-1,Math.min(1,CHARGES[i]*(.55+Math.random()*.45)+(Math.random()-.5)*.2)),gravSign:CHARGES[i]<0?-1:1,trait:i%3===2?TRAIT_KEYS[Math.floor(Math.random()*TRAIT_KEYS.length)]:null,stability:.2+Math.random()*.75,sensitivity:.5+Math.random()*1.2,sociability:-1+Math.random()*2,bondedAt:-Math.random()*400,voiceSeed:i*7+3,name:profile[0],gender:profile[1],age:profile[2],about:profile[3]}))}n.forEach(node=>{node.stage=lifeStage(node.age);if(!node.absent)containLight(node,r.width,r.height)});if(!e.length&&n.length>1&&!n[0].absent&&!n[1].absent){e=[{a:0,b:1,age:0,life:60}];n[0].twin=1;n[1].twin=0;n[0].twinPhase=n[1].twinPhase=Math.random()*7}}
 // --- the simulation owns world time and world state ------------------------
 // The 16 ms step below is the only thing that changes the world. go() reads it.
 function advanceBonds(){for(let i=e.length-1;i>=0;i--){let bond=e[i];bond.age+=.08;if(bond.age>bond.life){if(n[bond.a]&&n[bond.a].twin===bond.b){n[bond.a].twin=null;n[bond.a].bondedAt=t}if(n[bond.b]&&n[bond.b].twin===bond.a){n[bond.b].twin=null;n[bond.b].bondedAt=t}bonds.push({x:(n[bond.a].x+n[bond.b].x)/2,y:(n[bond.a].y+n[bond.b].y)/2,age:0});bondsBroken++;if(Math.random()<.14&&n[bond.a]&&n[bond.b])announceEvent(`${n[bond.a].name} and ${n[bond.b].name} have come apart.`,true);e.splice(i,1)}}}

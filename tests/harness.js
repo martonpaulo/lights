@@ -18,7 +18,7 @@ const EXPOSED = [
   'n', 'e', 't', 'events', 'bombs', 'selection', 'selected', 'audioStarted',
   'toneContext', 'availableVoices', 'eventLabel', 'encounters', 'affinity', 'regard',
   'camX', 'camY', 'activeSpeech', 'pendingSpeech', 'speakQueue', 'selectedEvent',
-  'dragged', 'draggedEvent', 'bonds', 'blastStack', 'musicChosen', 'calm', 'lastCaption',
+  'dragged', 'draggedEvent', 'bonds', 'blastStack', 'musicChosen', 'calm', 'lastCaption', 'tones',
 ];
 
 const FUNCTIONS = [
@@ -26,7 +26,7 @@ const FUNCTIONS = [
   'loadVoices', 'unlockAudio', 'startMusic', 'toggleMusic', 'dropBomb', 'spawnComet',
   'spawnPortals', 'spawnAttractor', 'updateEvents', 'announceEvent', 'learningPass',
   'socialPass', 'clearBonds', 'pairForces', 'simulationStep', 'lifeStage',
-  'converse', 'runQueue', 'endSpeechSession', 'replyPartner',
+  'converse', 'runQueue', 'endSpeechSession', 'replyPartner', 'withdrawLight',
 ];
 
 export function readPage() {
@@ -354,12 +354,13 @@ function makeSpeech(clock) {
 }
 
 function makeAudioContextClass(clock, log) {
+  // Scheduling is collapsed to an immediate assignment: tests read the target.
   const param = () => ({
     value: 0,
-    setValueAtTime() { return this; },
-    setTargetAtTime() { return this; },
-    linearRampToValueAtTime() { return this; },
-    exponentialRampToValueAtTime() { return this; },
+    setValueAtTime(v) { this.value = v; return this; },
+    setTargetAtTime(v) { this.value = v; return this; },
+    linearRampToValueAtTime(v) { this.value = v; return this; },
+    exponentialRampToValueAtTime(v) { this.value = v; return this; },
     cancelScheduledValues() { return this; },
   });
   const node = (type) => {
