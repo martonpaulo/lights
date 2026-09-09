@@ -4,6 +4,10 @@ Forty points of light drift, bond, age and speak in a dark field.
 
 **[Open it →](https://martonpaulo.com/small-lights/)**
 
+![The field with one light selected: the caption reads The Listener, Sofia, 38, Steady, and the
+line "Well... there is a rhythm in you I recognize." The guide is open on the left beside the music,
+voices and effects sliders.](docs/images/field.webp)
+
 ## What happens in there
 
 Every light is a person with a temperament: how steady it is, how much company it wants, how hard
@@ -105,6 +109,27 @@ node tests/browser/acceptance.mjs
 
 Pass an engine name — `chromium`, `firefox` or `webkit` — to run just one. Both halves run in CI,
 each gated to the paths it can actually observe.
+
+## Screenshots
+
+`docs/images/field.webp` is captured from a real browser window on screen, so it carries the
+window's own shadow, rounded corners and elevation:
+
+```bash
+node scripts/screenshot.mjs
+```
+
+It opens a clean Chromium as an app window at a fixed 1180x740 — no profile, no address bar, no
+automation banner — selects a light, brings the window to the front, and shoots it with
+`screencapture -l<windowid>`. It never passes `-o`, which is the flag that removes the shadow, and
+it refuses to run on a non-Retina display, where a capture silently comes out at half resolution. A
+browser cannot print its own window id the way a native app can, so the window is identified by the
+page title and the capture is refused unless exactly one window on screen matches. The result is
+capped at 1760 pixels wide — twice the widest place it is shown — and published as lossless WebP,
+which keeps the shadow's alpha and saves about 60% of the bytes.
+
+Do not add a border radius or a drop shadow to this image. It already has both, from the real
+window, and a second set would sit at a different radius.
 
 ## Security
 
