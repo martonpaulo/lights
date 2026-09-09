@@ -617,6 +617,14 @@ export function loadField(options = {}) {
     key(key, extra = {}) {
       return windowStub.dispatch('keydown', { key, ...extra });
     },
+    /** Changes the viewport the way a window resize does. */
+    resize(nextWidth, nextHeight) {
+      page.width = nextWidth;
+      page.height = nextHeight;
+      windowStub.innerWidth = nextWidth;
+      windowStub.innerHeight = nextHeight;
+      windowStub.dispatch('resize', {});
+    },
     /** Runs pending animation-frame callbacks without advancing the clock. */
     drawOnly(count = 1, step = 20) {
       let stamp = clock.now;
