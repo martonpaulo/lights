@@ -4,7 +4,7 @@
 
 Copyright 2026 Marton Paulo.
 
-Small Lights is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+Lights is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 You may share and adapt it, including commercially, provided you give appropriate credit, link to
 the license, and indicate whether changes were made.
 

@@ -1,4 +1,4 @@
-# Small Lights
+# Lights
 
 Forty points of light drift, bond, age and speak in a dark field.
 

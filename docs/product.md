@@ -1,4 +1,4 @@
-# Small Lights — product definition
+# Lights — product definition
 
 ## What it is
 

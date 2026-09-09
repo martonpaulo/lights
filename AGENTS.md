@@ -2,10 +2,10 @@
 
 ## Project identity and policy
 
-- Project name: `small-lights`
-- Public name: `Small Lights`
+- Project name: `lights`
+- Public name: `Lights`
 - Benefit-first description: A dark field where forty points of light drift, bond, age and speak, so watching it rewards attention instead of asking for it.
-- Repository: `martonpaulo/small-lights` (public)
+- Repository: `martonpaulo/lights` (public)
 - Public identifiers: none. The product is a single static page served at its landing page URL; there is no package, module, or bundle identifier.
 - Landing page: https://lights.martonpaulo.com/ — GitHub Pages, served from `main` at the repository root. The landing page is the product; there is no separate marketing site.
 - License: `CC-BY-4.0`

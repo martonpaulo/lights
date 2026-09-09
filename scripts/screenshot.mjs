@@ -40,7 +40,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(ROOT, 'docs', 'images');
 const OUT = join(OUT_DIR, 'field.webp');
 // screencapture refuses some destinations; a plain temp file is always writable.
-const RAW = join(tmpdir(), 'small-lights-field.png');
+const RAW = join(tmpdir(), 'lights-field.png');
 
 // Wide enough for the desktop layout the page switches to above 1024 CSS pixels.
 const WINDOW = { width: 1180, height: 740, x: 90, y: 70 };
@@ -87,7 +87,7 @@ async function main() {
   await mkdir(OUT_DIR, { recursive: true });
   const site = await serve();
   const { chromium } = await import('playwright');
-  const profile = await mkdtemp(join(tmpdir(), 'small-lights-shot-'));
+  const profile = await mkdtemp(join(tmpdir(), 'lights-shot-'));
   // A persistent context opens exactly one window with exactly one page, so
   // there is no blank second window to confuse the capture.
   const context = await chromium.launchPersistentContext(profile, {
