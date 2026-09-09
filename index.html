@@ -46,7 +46,10 @@
 <div id="caption" role="status" aria-live="polite"></div>
 
 <div id="summon-menu" role="group" aria-label="Summon"><button data-summon="comet" type="button">Comet</button><button data-summon="portal" type="button">Portal</button><button data-summon="attractor" type="button">Attractor</button></div>
-<audio id="music" loop preload="auto" src="space-ambient-mix.mp3"></audio>
+<!-- preload="none": the mix is 44 minutes long and weighs 42 MB, so "auto" made
+     every visitor download it before the first frame, whether or not they ever
+     pressed play. It streams from the first gesture instead. -->
+<audio id="music" loop preload="none" src="space-ambient-mix.mp3"></audio>
 <script>
 const c=document.querySelector('#c'),x=c.getContext('2d'),soundButton=document.querySelector('#sound'),volume=document.querySelector('#volume'),voicesVolume=document.querySelector('#voices-volume'),sfxVolume=document.querySelector('#sfx-volume'),music=document.querySelector('#music'),caption=document.querySelector('#caption'),kineticOutput=document.querySelector('#kinetic-energy');let n=[],e=[],t=0,lastAdd=0,lastFrame=0,audioStarted=false,mouseX=0,mouseY=0,dragged=null,selected=null,selection=[],availableVoices=[],toneContext=null,tones=[],lastPing=0,activeSpeech=0,pendingSpeech=0,speechId=0,lastCaption=null,lastSpokeAt=Date.now(),captionUntil=0,conversationTimer=null,pendingReply=null,speakQueue=[],activeChain=null,activeCaptions=new Map(),spokenLines=new Map(),backgroundGradient=null,glowX=.7,glowY=.25,glowToX=.7,glowToY=.25,glowNext=0,glowMadeX=-9,glowMadeY=-9,glowMadeW=0,glowMadeH=0,sfxGain=null,bombs=[],bonds=[],bondsBroken=0,affinity=new Float32Array(4096),regard=new Float32Array(4096),lastAnnounce=0,blastBus=null,lastBlastSound=-9,selectedEvent=null,draggedEvent=null,blastStack=0,blastAt=0,blastX=0,blastY=0,events=[],eventLabel=null;const MUSIC_SCALE=.075,SFX_SCALE=.05;
 // Web Audio and Web Speech are optional. Each has one owner here; nothing else
