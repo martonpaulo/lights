@@ -13,3 +13,7 @@
 
 # Agent scratch space
 .scratch/
+
+# Checking tools installed on demand, never shipped
+node_modules
+package-lock.json
