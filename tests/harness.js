@@ -19,6 +19,7 @@ const EXPOSED = [
   'toneContext', 'availableVoices', 'eventLabel', 'encounters', 'affinity', 'regard',
   'camX', 'camY', 'activeSpeech', 'pendingSpeech', 'speakQueue', 'selectedEvent',
   'dragged', 'draggedEvent', 'bonds', 'blastStack', 'musicChosen', 'calm', 'lastCaption', 'tones',
+  'cursor', 'cursorVisible',
 ];
 
 const FUNCTIONS = [
@@ -27,10 +28,17 @@ const FUNCTIONS = [
   'spawnPortals', 'spawnAttractor', 'updateEvents', 'announceEvent', 'learningPass',
   'socialPass', 'clearBonds', 'pairForces', 'simulationStep', 'lifeStage',
   'converse', 'runQueue', 'endSpeechSession', 'replyPartner', 'withdrawLight',
+  'selectLight', 'detonateAt', 'stepCursor', 'navigationRing', 'openSummonMenu', 'closeSummonMenu',
 ];
 
 export function readPage() {
   return readFileSync(PAGE, 'utf8');
+}
+
+/** The markup between the style block and the script. */
+export function readMarkup() {
+  const html = readPage();
+  return html.slice(html.indexOf('</style>') + 8, html.indexOf('<script>'));
 }
 
 export function readScript() {
@@ -244,8 +252,11 @@ class AudioElement extends Element {
   }
 }
 
-/** The handful of elements index.html declares, rebuilt without a parser. */
-function buildPage(width, height) {
+/**
+ * Builds the element tree from index.html's own markup, so ids, classes, roles,
+ * tabindex and data attributes are the ones that ship rather than a copy.
+ */
+function buildPage(width, height, markup) {
   const page = {
     width,
     height,
@@ -269,28 +280,28 @@ function buildPage(width, height) {
   page.body = make('body');
   page.activeElement = page.body;
 
-  make('canvas', 'c');
-  make('audio', 'music');
-  const soundButton = make('button', 'sound');
-  soundButton.textContent = '▶';
-  for (const id of ['volume', 'voices-volume', 'sfx-volume']) {
-    const slider = make('input', id);
-    slider.type = 'range';
-    slider.value = '1';
+  const camel = (name) => name.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+  let menu = null;
+  for (const tag of markup.matchAll(/<([a-zA-Z][\w-]*)((?:\s+[\w:-]+(?:="[^"]*")?)*)\s*\/?>/g)) {
+    const name = tag[1].toLowerCase();
+    const attributes = {};
+    for (const attribute of tag[2].matchAll(/([\w:-]+)(?:="([^"]*)")?/g)) attributes[attribute[1]] = attribute[2] ?? '';
+    const id = attributes.id;
+    const isSummonButton = name === 'button' && 'data-summon' in attributes;
+    if (!id && !isSummonButton) continue;
+
+    const element = make(name, id);
+    for (const [key, value] of Object.entries(attributes)) {
+      if (key === 'id') continue;
+      if (key === 'class') element.className = value;
+      else if (key.startsWith('data-')) element.dataset[camel(key.slice(5))] = value;
+      else element.setAttribute(key, value);
+    }
+    if (name === 'input') element.value = attributes.value ?? '';
+    if (id === 'sound') element.textContent = '▶';
+    if (id === 'summon-menu') menu = element;
+    else if (isSummonButton && menu) menu.append(element);
   }
-  make('div', 'caption');
-  make('output', 'kinetic-energy');
-  make('div', 'selection-ring');
-  make('p', 'hint').classList.add('gone');
-  make('button', 'help');
-  const menu = make('div', 'summon-menu');
-  for (const kind of ['comet', 'portal', 'attractor']) {
-    const button = make('button');
-    button.dataset.summon = kind;
-    menu.append(button);
-  }
-  make('div', 'audio-panel');
-  make('div', 'energy-panel');
 
   page.querySelector = (selector, scope) => {
     if (selector.startsWith('#')) return page.byId.get(selector.slice(1)) || null;
@@ -422,7 +433,7 @@ export function loadField(options = {}) {
   } = options;
 
   const clock = new Clock();
-  const page = buildPage(width, height);
+  const page = buildPage(width, height, readMarkup());
   const random = randomOverride || seededRandom(seed);
   const errors = [];
   const audioLog = { created: 0, connections: [], started: [] };

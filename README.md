@@ -38,6 +38,23 @@ happened to it.
 | Drag | Moves a light or a summon |
 | Escape | Clears the selection |
 
+Everything above is reachable without a pointer. Tab moves into the field, then:
+
+| Key | What it does |
+| --- | --- |
+| Arrow keys | Move the cursor between lights and summons |
+| Enter | Selects the light under the cursor |
+| Shift + Enter | Holds a second one, or lets a held one go |
+| Shift + arrow keys | Moves the light or summon under the cursor |
+| S | Opens the summon list at the cursor |
+| B | Detonates at the cursor |
+| Escape | Closes the summon list, or clears the selection |
+
+The field announces what the cursor is on, so a screen reader reads out the light's personality,
+name, age and whether it is selected. Tab continues out of the field into the audio controls. In
+Safari, reaching the buttons and sliders with Tab needs **Settings → Advanced → Press Tab to
+highlight each item**, which is that browser's own default rather than something this page sets.
+
 Sound starts only after you interact, and the panel controls music, voices and effects separately.
 Levels persist in your browser.
 
