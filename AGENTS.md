@@ -17,7 +17,7 @@
 - Push policy: push only when explicitly requested. A push publishes: GitHub Pages redeploys `main` automatically.
 - Product versioning: none. The product has no user-visible version, no `CHANGELOG.md`, no tags, and no releases. Git history is the record.
 - Browser acceptance: Chromium, Gecko and WebKit. Validate behavior in all three engine families; report unavailable engines and human-only checks explicitly.
-- Agent automation: `disabled`
+- Agent automation: `disabled`. Continuous integration is two path-gated GitHub Actions workflows that only check the page; nothing deploys, releases or writes to the repository.
 - Agent clients: Codex, Claude and Antigravity CLI. `AGENTS.md` is canonical; `CLAUDE.md` is a relative symlink to it. Antigravity CLI (`agy` 1.1.27) uses the root `AGENTS.md`; root-guidance loading was observed during setup on 2026-09-09 (browser families and automation state). Formal collection verification remains pending because it requires a project-local skill file, which this repository does not own. The legacy `.gemini/rules/agents.md` link is not an active adapter for these selected clients.
 - Default-branch approving review: not required for the manual, direct-to-`main` workflow. Automated merging is not configured.
 - Regression tests: separate persistent `node:test` files are allowed without dependencies. The application remains one HTML file; test files are not runtime modules.
@@ -178,18 +178,30 @@ Follow the active workflow's authority: a proposed follow-up does not authorize 
 
 - Ignore secrets, local environments, logs, caches, build output, and generated artifacts appropriate to the actual stack.
 - When local environment variables exist, maintain `.env.example` with every supported name and a safe placeholder in the same syntax as the real value.
-- Configure dependency updates, CI, release workflows, a release channel, signing, and secure secret storage when distribution or project risk requires them. Do not add placeholder automation.
+- Configure dependency updates, CI, release workflows, a release channel, signing, and secure secret storage when distribution or project risk requires them. Do not add placeholder automation. A workflow declares the paths it can observe, so an unrelated change does not pay for it.
 - Keep secrets in the platform or provider's secure store, never in versioned files.
 
 ## Test ownership and commands
 
-The product has no build step or package dependencies. Keep persistent regression tests under
-`tests/` using Node's built-in `node:test`; create that path only with real test content. Run them
-with `node --test` once they exist. This setup does not create a placeholder test runner or CI.
-Tests exercise observable simulation transitions and browser API boundaries, not source-text
-snapshots, duplicated constants or private implementation wiring. Browser acceptance remains
-Chromium, Gecko and WebKit; Node tests do not substitute for those rendered/integration checks.
-The existing embedded-script syntax command in `README.md` remains valid before tests are added.
+The product has no build step or package dependencies. The checks come in two halves, and the
+pipeline is gated so each runs only when something it can observe has changed.
+
+- **Cheap, nothing installed.** `node --test` runs the regressions under `tests/`, which load the
+  real `index.html` through `tests/harness.js` — a `vm` context with a virtual clock, a DOM built
+  from the page's own markup, and switchable Web Speech and Web Audio globals. `index.html` ships no
+  test hooks. Tests exercise observable simulation transitions and browser API boundaries, not
+  source-text snapshots, duplicated constants or private implementation wiring. The embedded-script
+  syntax command in `README.md` runs alongside them. Workflow: `.github/workflows/validate.yml`,
+  gated on `index.html` and `tests/**`.
+- **Expensive, real engines.** `node tests/browser/acceptance.mjs [engine]` serves the folder and
+  drives Chromium, Gecko and WebKit. Playwright is a checking tool installed on demand, never a
+  project dependency and never loaded by the page; `node_modules/` is ignored. Workflow:
+  `.github/workflows/browser-acceptance.yml`, gated on `index.html` and `tests/browser/**` and
+  pinned to one Playwright version so a cache hit means the same browser builds.
+
+Node tests do not substitute for the rendered checks, and neither substitutes for the human
+judgements — screen-reader behaviour, listening quality, comfort under reduced motion — which must
+be reported as unverified rather than claimed.
 
 ## Tests and validation
 

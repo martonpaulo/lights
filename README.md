@@ -78,15 +78,33 @@ Then open <http://localhost:8000>.
 
 ## Validation
 
-There is no build or test runner. Check the embedded JavaScript before publishing:
+Two halves, so the cheap one can run on everything and the slow one only when it has something to
+look at. Neither is a dependency of the page.
+
+Regressions, with nothing installed:
+
+```bash
+node --test
+```
+
+The embedded JavaScript parses:
 
 ```bash
 node -e "const s=require('fs').readFileSync('index.html','utf8');new Function(s.match(/<script>([\\s\\S]*?)<\\/script>/)[1]);console.log('OK')"
 ```
 
-Then serve the page locally and confirm that it starts with forty lights and no console errors
-in Chromium, Gecko and WebKit. Separate dependency-free regression tests using `node:test` are
-approved; once tests exist, run them with `node --test`. No persistent tests are present yet.
+Acceptance in the three engine families, which needs Playwright installed on demand:
+
+```bash
+npm install --no-save playwright@1.63.0 && npx playwright install --with-deps
+```
+
+```bash
+node tests/browser/acceptance.mjs
+```
+
+Pass an engine name — `chromium`, `firefox` or `webkit` — to run just one. Both halves run in CI,
+each gated to the paths it can actually observe.
 
 ## Security
 

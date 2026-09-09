@@ -1,0 +1,44 @@
+# The cheap half of the pipeline: nothing to install, seconds to run.
+# It answers "does the embedded script still parse, and do the regressions hold",
+# so it runs whenever the page or a test changes.
+name: Validate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - tests/**
+      - .github/workflows/validate.yml
+  pull_request:
+    paths:
+      - index.html
+      - tests/**
+      - .github/workflows/validate.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: The embedded script parses
+        run: |
+          node -e "const s=require('fs').readFileSync('index.html','utf8');
+          new Function(s.match(/<script>([\s\S]*?)<\/script>/)[1]);
+          console.log('embedded script parses')"
+
+      - name: Regression tests
+        run: node --test

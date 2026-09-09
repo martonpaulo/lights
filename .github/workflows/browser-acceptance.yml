@@ -1,0 +1,59 @@
+# The expensive half: it downloads and drives real Chromium, Gecko and WebKit
+# builds, so it only runs when something a browser can observe has changed —
+# the page itself or the acceptance script. A change to the README, to a
+# node:test file or to the other workflow cannot alter what a browser sees.
+name: Browser acceptance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - tests/browser/**
+      - .github/workflows/browser-acceptance.yml
+  pull_request:
+    paths:
+      - index.html
+      - tests/browser/**
+      - .github/workflows/browser-acceptance.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: browser-acceptance-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned so a cache hit and a run always mean the same browser builds.
+  PLAYWRIGHT_VERSION: 1.63.0
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Cache browser builds
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ env.PLAYWRIGHT_VERSION }}-${{ matrix.engine }}-${{ runner.os }}
+
+      - name: Install the checking tool
+        run: npm install --no-save --no-audit --no-fund playwright@${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: Install ${{ matrix.engine }}
+        run: npx playwright install --with-deps ${{ matrix.engine }}
+
+      - name: Acceptance in ${{ matrix.engine }}
+        run: node tests/browser/acceptance.mjs ${{ matrix.engine }}
