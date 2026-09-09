@@ -194,3 +194,21 @@ test('the audio controls keep their own keyboard behaviour', () => {
   assert.deepEqual(seen, ['ArrowRight']);
   assert.equal(field.document.activeElement, slider, 'the field must not steal focus back');
 });
+
+test('the cursor leaves a light that goes dark', () => {
+  const field = loadField();
+  focusField(field);
+  key(field, 'ArrowRight');
+  const light = field.field.cursor;
+  const status = field.element('field-status');
+
+  light.dying = 1;
+  light.fade = 0.99;
+  field.advance(1000);
+  assert.ok(light.absent > 0);
+
+  key(field, 'ArrowRight');
+  assert.notEqual(field.field.cursor, light, 'the cursor must not sit on an empty slot');
+  assert.ok(!field.field.cursor.absent);
+  assert.ok(!status.textContent.includes(light.name) || field.field.cursor.name === light.name);
+});
