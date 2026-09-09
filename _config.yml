@@ -1,0 +1,21 @@
+# GitHub Pages builds this repository with Jekyll so that the files below never
+# reach the published site. The site itself has no Jekyll content: index.html
+# and 404.html carry no front matter, which Jekyll copies through untouched.
+#
+# Without this list the legacy build publishes the whole repository, so
+# AGENTS.md, the docs and the scripts answered 200 on the public host and were
+# crawlable.
+exclude:
+  - .gemini/
+  - .github/
+  - AGENTS.md
+  - CLAUDE.md
+  - NOTICE.md
+  - README.md
+  - docs/
+  - node_modules/
+  - package.json
+  - package-lock.json
+  - scripts/
+  - social-card.svg
+  - tests/
