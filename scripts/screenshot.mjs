@@ -46,7 +46,7 @@ const RAW = join(tmpdir(), 'small-lights-field.png');
 const WINDOW = { width: 1180, height: 740, x: 90, y: 70 };
 const PUBLISH_WIDTH = 1760;
 
-const TYPES = { '.html': 'text/html; charset=utf-8', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.mp3': 'audio/mpeg' };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.mp3': 'audio/mpeg' };
 
 function serve() {
   const server = createServer(async (request, response) => {

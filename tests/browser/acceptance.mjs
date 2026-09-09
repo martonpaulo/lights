@@ -21,8 +21,11 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
   '.ico': 'image/x-icon',
   '.mp3': 'audio/mpeg',
+  '.xml': 'application/xml; charset=utf-8',
   '.md': 'text/markdown; charset=utf-8',
 };
 
@@ -296,6 +299,62 @@ async function runEngine(name, launcher, url) {
       && lively.drifted && lively.grainPlaces > 1 && calm.problems === 0 && lively.problems === 0,
       `reduce: drift=${calm.drifted} grainPlaces=${calm.grainPlaces} over ${calm.frames} frames; `
       + `ordinary: drift=${lively.drifted} grainPlaces=${lively.grainPlaces} over ${lively.frames} frames`);
+  }
+
+  // 9. The page describes itself correctly to crawlers and link previews.
+  {
+    const { page, problems } = await open(browser, url);
+    const head = await page.evaluate(() => {
+      const meta = (selector) => (document.querySelector(selector) || {}).content || null;
+      const ld = document.querySelector('script[type="application/ld+json"]');
+      let graph = null;
+      try { graph = JSON.parse(ld.textContent); } catch { graph = null; }
+      return {
+        lang: document.documentElement.lang,
+        title: document.title,
+        h1: [...document.querySelectorAll('h1')].map((node) => node.textContent),
+        headings: [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')].map((node) => Number(node.tagName[1])),
+        canonical: (document.querySelector('link[rel=canonical]') || {}).href || null,
+        description: meta('meta[name=description]'),
+        themeColor: meta('meta[name=theme-color]'),
+        ogImage: meta('meta[property="og:image"]'),
+        ogType: meta('meta[property="og:image:type"]'),
+        ogWidth: meta('meta[property="og:image:width"]'),
+        ogHeight: meta('meta[property="og:image:height"]'),
+        ogAlt: meta('meta[property="og:image:alt"]'),
+        twitterCard: meta('meta[name="twitter:card"]'),
+        twitterImage: meta('meta[name="twitter:image"]'),
+        twitterAlt: meta('meta[name="twitter:image:alt"]'),
+        canvasLabel: (document.querySelector('#c') || {}).ariaLabel || document.querySelector('#c').getAttribute('aria-label'),
+        types: graph ? graph['@graph'].map((entry) => entry['@type']) : [],
+      };
+    });
+    // The declared social image must exist and be exactly what the tags claim.
+    const card = await page.evaluate((src) => new Promise((resolve) => {
+      const image = new Image();
+      image.onload = () => resolve([image.naturalWidth, image.naturalHeight]);
+      image.onerror = () => resolve([0, 0]);
+      // The tags name the published URL; locally the file sits beside the page.
+      image.src = src.split('/').pop();
+    }), head.ogImage);
+    const sitemap = await page.evaluate(async () => {
+      const response = await fetch('sitemap.xml');
+      return response.ok ? (await response.text()).includes('<loc>') : false;
+    });
+    const ordered = head.headings.every((level, at) => at === 0 ? level === 1 : level <= head.headings[at - 1] + 1);
+    check(name, 'the page describes itself to crawlers and previews',
+      head.lang === 'en' && head.title && head.h1.length === 1 && ordered
+      && /^https:\/\/martonpaulo\.com\/small-lights\/$/.test(head.canonical)
+      && head.description && head.themeColor
+      && /\.png$/.test(head.ogImage) && head.ogType === 'image/png'
+      && head.ogWidth === '1200' && head.ogHeight === '630' && head.ogAlt
+      && head.twitterCard === 'summary_large_image' && head.twitterImage === head.ogImage && head.twitterAlt
+      && card[0] === 1200 && card[1] === 630
+      && head.types.includes('WebSite') && head.types.includes('VisualArtwork')
+      && head.canvasLabel && sitemap && problems.length === 0,
+      `lang=${head.lang} h1=${head.h1.length} headings=[${head.headings}] canonical=${head.canonical} `
+      + `card=${card.join('x')} ${head.ogType} types=[${head.types}] sitemap=${sitemap}`);
+    await page.close();
   }
 
   await browser.close();

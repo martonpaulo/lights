@@ -131,6 +131,15 @@ which keeps the shadow's alpha and saves about 60% of the bytes.
 Do not add a border radius or a drop shadow to this image. It already has both, from the real
 window, and a second set would sit at a different radius.
 
+The link-preview card is generated from `social-card.svg`, because no sharing platform renders SVG:
+
+```bash
+node scripts/social-card.mjs
+```
+
+The SVG stays the source; `social-card.png` is written from it at exactly the 1200x630 the meta tags
+declare, and is never edited by hand.
+
 ## Security
 
 There is no backend, account, dependency or secret configuration. Every repository file is served
