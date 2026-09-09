@@ -66,9 +66,11 @@ pattern, the proposed one, and why the existing one does not fit.
   drawing and owns no simulation. Anything that changes the world goes in the first. The world
   pauses while the document is hidden and resumes without compensating for hidden elapsed time
   (desired behavior tracked in issue #5); this does not override explicit music playback intent.
-- **A node is a flat object.** Every trait is a plain property on the node, initialised where nodes
-  are created and mirrored in `reborn()`. A new trait is added in both places or it leaks between
-  lives.
+- **A node is a flat object with one life-owner.** Every trait is a plain property on the node.
+  `freshLife()` owns every per-life and transient field and runs on both paths — the first cast in
+  `rs()` and every replacement in `reborn()` — so a new trait is added in one place and cannot leak
+  between lives. Only slot identity (size, hub flag) and the authored first-life cast are set by the
+  caller.
 - **Pair state lives in typed arrays.** `affinity` and `regard` are `Float32Array` indexed by
   `pairKey(i, j)`. They are cleared for a node's row and column when it is reborn.
 - **Absent nodes take no part.** A slot waiting to be reborn is skipped by physics, rendering,
