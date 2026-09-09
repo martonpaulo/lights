@@ -2,7 +2,7 @@
 
 Forty points of light drift, bond, age and speak in a dark field.
 
-**[Open it →](https://martonpaulo.com/small-lights/)**
+**[Open it →](https://small-lights.martonpaulo.com/)**
 
 ![The field with one light selected: the caption reads The Listener, Sofia, 38, Steady, and the
 line "Well... there is a rhythm in you I recognize." The guide is open on the left beside the music,
