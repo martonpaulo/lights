@@ -415,13 +415,14 @@ export function loadField(options = {}) {
     width = 1440,
     height = 900,
     seed = 12345,
+    random: randomOverride = null,
     voices = defaultVoices(),
     autoStart = true,
   } = options;
 
   const clock = new Clock();
   const page = buildPage(width, height);
-  const random = seededRandom(seed);
+  const random = randomOverride || seededRandom(seed);
   const errors = [];
   const audioLog = { created: 0, connections: [], started: [] };
   const speechKit = speech ? makeSpeech(clock) : null;
@@ -615,6 +616,19 @@ export function loadField(options = {}) {
     },
     key(key, extra = {}) {
       return windowStub.dispatch('keydown', { key, ...extra });
+    },
+    /** Runs pending animation-frame callbacks without advancing the clock. */
+    drawOnly(count = 1, step = 20) {
+      let stamp = clock.now;
+      for (let i = 0; i < count; i++) {
+        const pending = frames.splice(0, frames.length);
+        stamp += step;
+        for (const callback of pending) callback(stamp);
+      }
+    },
+    /** Runs the fixed simulation step directly, without drawing anything. */
+    step(count = 1) {
+      for (let i = 0; i < count; i++) sandbox.__field.fn.simulationStep();
     },
     /** Draws one frame with the 2d context recording what it was asked to do. */
     recordFrame() {

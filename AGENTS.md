@@ -62,10 +62,11 @@ pattern, the proposed one, and why the existing one does not fit.
 - **One file, three layers.** `index.html` holds markup, a single `<style>` block, and a single
   `<script>`. No build step, no modules, no dependencies. A second file needs a reason stronger than
   tidiness. The owner-approved exception is separate dependency-free regression tests.
-- **Two loops.** A `setInterval` at 16 ms owns physics and state; `requestAnimationFrame` owns
-  drawing and owns no simulation. Anything that changes the world goes in the first. The world
-  pauses while the document is hidden and resumes without compensating for hidden elapsed time
-  (desired behavior tracked in issue #5); this does not override explicit music playback intent.
+- **Two loops.** `simulationStep()` on a 16 ms `setInterval` owns world time, physics and state;
+  `requestAnimationFrame` owns drawing and owns no simulation. Anything that changes the world goes
+  in the first, including the lifetimes of things that only draw. The world nearly pauses while the
+  document is hidden, because the browser throttles the interval, and resumes without compensating
+  for hidden elapsed time; this does not override explicit music playback intent.
 - **A node is a flat object with one life-owner.** Every trait is a plain property on the node.
   `freshLife()` owns every per-life and transient field and runs on both paths — the first cast in
   `rs()` and every replacement in `reborn()` — so a new trait is added in one place and cannot leak
