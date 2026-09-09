@@ -18,7 +18,7 @@ const EXPOSED = [
   'n', 'e', 't', 'events', 'bombs', 'selection', 'selected', 'audioStarted',
   'toneContext', 'availableVoices', 'eventLabel', 'encounters', 'affinity', 'regard',
   'camX', 'camY', 'activeSpeech', 'pendingSpeech', 'speakQueue', 'selectedEvent',
-  'dragged', 'draggedEvent', 'bonds', 'blastStack', 'musicChosen',
+  'dragged', 'draggedEvent', 'bonds', 'blastStack', 'musicChosen', 'calm',
 ];
 
 const FUNCTIONS = [
@@ -101,7 +101,10 @@ function makeContext2d() {
     getImageData: (x, y, w, h) => ({ width: w, height: h, data: new Uint8ClampedArray(w * h * 4) }),
     measureText: (text) => ({ width: String(text).length * 7 }),
   };
-  for (const name of CONTEXT_METHODS) ctx[name] = () => {};
+  // Off by default; tests turn it on for a frame when the drawing itself is the contract.
+  ctx.recording = false;
+  ctx.calls = [];
+  for (const name of CONTEXT_METHODS) ctx[name] = (...args) => { if (ctx.recording) ctx.calls.push([name, ...args]); };
   return ctx;
 }
 
@@ -611,6 +614,15 @@ export function loadField(options = {}) {
     },
     key(key, extra = {}) {
       return windowStub.dispatch('keydown', { key, ...extra });
+    },
+    /** Draws one frame with the 2d context recording what it was asked to do. */
+    recordFrame() {
+      const ctx = page.byId.get('c').context;
+      ctx.calls = [];
+      ctx.recording = true;
+      harness.frame(1);
+      ctx.recording = false;
+      return ctx.calls;
     },
   };
 
