@@ -26,7 +26,7 @@ locally, and the only thing ever stored is your three volume levels.
 
 <br />
 
-## 🌱 Quick Start
+## Quick Start
 
 No build, no dependencies. Serve the folder over HTTP so the audio loads:
 
@@ -40,7 +40,7 @@ Sound starts only after you interact with the page.
 
 <br />
 
-## 🛠 Commands
+## Commands
 
 There is no package manifest and no install step. Every command below is optional tooling, never a
 dependency of the page.
@@ -58,15 +58,6 @@ Both halves of the suite run in CI, each gated to the paths it can actually obse
 watches `index.html` and `tests/**`, and `browser.yml` watches `index.html` and
 `tests/browser/**`, with the Playwright version pinned so a cache hit always means the same browser
 builds.
-
-<br />
-
-## 🔐 Secrets and variables
-
-**This project has none.** There is no backend, account, build step, dependency, signing identity,
-environment variable or GitHub Actions secret — publication is a push to `main`, and neither
-workflow reads anything but the checked-out files. Every repository file is served publicly by
-GitHub Pages, so credentials and private data must never be added to the project.
 
 ---
 
