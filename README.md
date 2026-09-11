@@ -20,7 +20,6 @@ It is **one HTML file with no build step and no dependencies**: markup, one `<st
 `<script>`. Everything runs in your browser, speech uses only the voices your own system synthesises
 locally, and the only thing ever stored is your three volume levels.
 
-
 ---
 
 <br />
@@ -64,7 +63,6 @@ builds.
 environment variable or GitHub Actions secret — publication is a push to `main`, and neither
 workflow reads anything but the checked-out files. Every repository file is served publicly by
 GitHub Pages, so credentials and private data must never be added to the project.
-
 
 ---
 
@@ -153,7 +151,6 @@ server. The only thing stored is your three volume levels, in `localStorage`.
 Bug reports, ideas and patches are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). The working
 agreements for this repository — its patterns, test ownership and Git policy — are in
 [AGENTS.md](AGENTS.md).
-
 
 ---
 
