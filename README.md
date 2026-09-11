@@ -32,7 +32,9 @@ No build, no dependencies. Serve the folder over HTTP so the audio loads:
 python3 -m http.server 8000
 ```
 
-Then open <http://localhost:8000>. Sound starts only after you interact with the page.
+Then open [http://localhost:8000](http://localhost:8000).
+
+Sound starts only after you interact with the page.
 
 <br />
 
