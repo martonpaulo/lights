@@ -27,35 +27,35 @@ locally, and the only thing ever stored is your three volume levels.
 <br />
 
 ## 🌱 Quick Start
-No build, no dependencies. Serve the folder over HTTP so the audio loads:
+
+No build step, no dependencies: a static file server and a current browser are all it takes.
 
 ```bash
+git clone https://github.com/martonpaulo/lights.git
+cd lights
 python3 -m http.server 8000
 ```
 
-Then open [http://localhost:8000](http://localhost:8000).
+[http://localhost:8000](http://localhost:8000)
+
+Serve the folder over HTTP rather than opening `index.html` from disk, so the audio loads.
 
 Sound starts only after you interact with the page.
 
 <br />
 
 ## 🛠 Commands
-There is no package manifest and no install step. Every command below is optional tooling, never a
-dependency of the page.
 
 | Command | What it does |
-|---|---|
-| `node --test` | The regression suite in `tests/`, which loads the real `index.html` through `tests/harness.js`. Nothing to install |
-| `node -e "const s=require('fs').readFileSync('index.html','utf8');new Function(s.match(/<script>([\s\S]*?)<\/script>/)[1]);console.log('OK')"` | Checks that the embedded script still parses |
-| `npm install --no-save playwright@1.63.0 && npx playwright install --with-deps` | Installs the acceptance tooling on demand |
-| `node tests/browser/acceptance.mjs` | Acceptance in all three engine families. Pass `chromium`, `firefox` or `webkit` to run just one |
-| `node scripts/social-card.mjs` | Renders `social-card.jpg` from `design/social-card/social-card.html` at exactly the 1200x630 the meta tags declare |
-| `python3 -m http.server 8000` | Serves the page locally |
+| --- | --- |
+| `node --test` | Runs the regression suite in `tests/`, loading the real `index.html` through `tests/harness.js`. |
+| `node -e "const s=require('fs').readFileSync('index.html','utf8');new Function(s.match(/<script>([\s\S]*?)<\/script>/)[1]);console.log('OK')"` | Checks that the embedded script still parses, the other half of the CI gate. |
+| `python3 -m http.server 8000` | Serves the page locally. |
+| `npm install --no-save playwright@1.63.0 && npx playwright install --with-deps` | Installs the acceptance tooling on demand. |
+| `node tests/browser/acceptance.mjs` | Runs acceptance in all three engine families. Pass `chromium`, `firefox` or `webkit` to run just one. |
+| `node scripts/social-card.mjs` | Renders `social-card.jpg` from `design/social-card/social-card.html` at exactly the 1200x630 the meta tags declare. |
 
-Both halves of the suite run in CI, each gated to the paths it can actually observe: `validate.yml`
-watches `index.html` and `tests/**`, and `browser.yml` watches `index.html` and
-`tests/browser/**`, with the Playwright version pinned so a cache hit always means the same browser
-builds.
+Every command is optional tooling run from the repository root: there is no package manifest and no install step the page depends on.
 
 ---
 
@@ -144,6 +144,11 @@ server. The only thing stored is your three volume levels, in `localStorage`.
 Bug reports, ideas and patches are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). The working
 agreements for this repository — its patterns, test ownership and Git policy — are in
 [AGENTS.md](AGENTS.md).
+
+Both halves of the suite run in CI, each gated to the paths it can actually observe: `validate.yml`
+watches `index.html` and `tests/**`, and `browser.yml` watches `index.html` and
+`tests/browser/**`, with the Playwright version pinned so a cache hit always means the same browser
+builds.
 
 ---
 
