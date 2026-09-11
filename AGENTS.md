@@ -196,7 +196,7 @@ pipeline is gated so each runs only when something it can observe has changed.
 - **Expensive, real engines.** `node tests/browser/acceptance.mjs [engine]` serves the folder and
   drives Chromium, Gecko and WebKit. Playwright is a checking tool installed on demand, never a
   project dependency and never loaded by the page; `node_modules/` is ignored. Workflow:
-  `.github/workflows/browser-acceptance.yml`, gated on `index.html` and `tests/browser/**` and
+  `.github/workflows/browser.yml`, gated on `index.html` and `tests/browser/**` and
   pinned to one Playwright version so a cache hit means the same browser builds.
 
 Node tests do not substitute for the rendered checks, and neither substitutes for the human

@@ -2,7 +2,7 @@
 # builds, so it only runs when something a browser can observe has changed —
 # the page itself or the acceptance script. A change to the README, to a
 # node:test file or to the other workflow cannot alter what a browser sees.
-name: Browser acceptance
+name: Browser suite
 
 on:
   push:
@@ -10,12 +10,12 @@ on:
     paths:
       - index.html
       - tests/browser/**
-      - .github/workflows/browser-acceptance.yml
+      - .github/workflows/browser.yml
   pull_request:
     paths:
       - index.html
       - tests/browser/**
-      - .github/workflows/browser-acceptance.yml
+      - .github/workflows/browser.yml
   workflow_dispatch:
 
 permissions:

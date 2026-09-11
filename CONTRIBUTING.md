@@ -76,7 +76,7 @@ node tests/browser/acceptance.mjs
 ```
 
 Pass `chromium`, `firefox` or `webkit` to run a single engine.
-[`.github/workflows/browser-acceptance.yml`](.github/workflows/browser-acceptance.yml) runs all
+[`.github/workflows/browser.yml`](.github/workflows/browser.yml) runs all
 three as a matrix, gated on `index.html` and `tests/browser/**`, with the Playwright version pinned.
 
 Serve the page while you work with `python3 -m http.server 8000`.

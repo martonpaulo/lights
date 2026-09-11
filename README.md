@@ -6,7 +6,7 @@
 
 A dark field where forty points of light drift, bond, age and speak, so watching it rewards attention instead of asking for it.
 
-[![Validate](https://github.com/martonpaulo/lights/actions/workflows/validate.yml/badge.svg)](https://github.com/martonpaulo/lights/actions/workflows/validate.yml) [![Browser acceptance](https://github.com/martonpaulo/lights/actions/workflows/browser-acceptance.yml/badge.svg)](https://github.com/martonpaulo/lights/actions/workflows/browser-acceptance.yml) [![Node 24](https://img.shields.io/badge/Node-24-green)](https://nodejs.org) [![Playwright 1.63](https://img.shields.io/badge/Playwright-1.63-blue)](https://playwright.dev)
+[![Validate](https://github.com/martonpaulo/lights/actions/workflows/validate.yml/badge.svg)](https://github.com/martonpaulo/lights/actions/workflows/validate.yml) [![Browser suite](https://github.com/martonpaulo/lights/actions/workflows/browser.yml/badge.svg)](https://github.com/martonpaulo/lights/actions/workflows/browser.yml) [![Node 24](https://img.shields.io/badge/Node-24-green)](https://nodejs.org) [![Playwright 1.63](https://img.shields.io/badge/Playwright-1.63-blue)](https://playwright.dev)
 
 </div>
 
@@ -53,7 +53,7 @@ dependency of the page.
 | `python3 -m http.server 8000` | Serves the page locally |
 
 Both halves of the suite run in CI, each gated to the paths it can actually observe: `validate.yml`
-watches `index.html` and `tests/**`, and `browser-acceptance.yml` watches `index.html` and
+watches `index.html` and `tests/**`, and `browser.yml` watches `index.html` and
 `tests/browser/**`, with the Playwright version pinned so a cache hit always means the same browser
 builds.
 
