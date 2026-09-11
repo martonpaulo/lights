@@ -1,17 +1,66 @@
+<div align="center">
+
+<img src="social-card.jpg" width="100%" alt="Lights: a field of glowing lights, each with a temper, a friend and a rival">
+
 # Lights
 
-![Lights: a field of glowing lights, each with a temper, a friend and a rival](social-card.jpg)
+A dark field where forty points of light drift, bond, age and speak, so watching it rewards attention instead of asking for it.
 
-Each light has a temper, a friend and a rival. They drift together, fall out, grow old and fade in the dark, and speak when you touch one.
+[![Validate](https://github.com/martonpaulo/lights/actions/workflows/validate.yml/badge.svg)](https://github.com/martonpaulo/lights/actions/workflows/validate.yml) [![Browser acceptance](https://github.com/martonpaulo/lights/actions/workflows/browser-acceptance.yml/badge.svg)](https://github.com/martonpaulo/lights/actions/workflows/browser-acceptance.yml) [![Node 24](https://img.shields.io/badge/Node-24-green)](https://nodejs.org) [![Playwright 1.63](https://img.shields.io/badge/Playwright-1.63-blue)](https://playwright.dev)
 
-**[Open it →](https://lights.martonpaulo.com/)**
+</div>
+
+Each light is a person with a temperament: how steady it is, how much company it wants, how hard it
+feels what happens to it. **They drift together, fall out, grow old and fade in the dark, and speak
+when you touch one.** Some carry a divergent trait — restless, single-minded, easily overwhelmed,
+self-regulating — and all of it is simulated, so what a light does can be traced to what happened to
+it.
+
+It is **one HTML file with no build step and no dependencies**: markup, one `<style>` block and one
+`<script>`. Everything runs in your browser, speech uses only the voices your own system synthesises
+locally, and the only thing ever stored is your three volume levels.
+
+<br />
+
+---
+
+## 🌱 Quick Start
+
+No build, no dependencies. Serve the folder over HTTP so the audio loads:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then open <http://localhost:8000>. Sound starts only after you interact with the page.
+
+## 🛠 Commands
+
+There is no package manifest and no install step. Every command below is optional tooling, never a
+dependency of the page.
+
+| Command | What it does |
+|---|---|
+| `node --test` | The regression suite in `tests/`, which loads the real `index.html` through `tests/harness.js`. Nothing to install |
+| `node -e "const s=require('fs').readFileSync('index.html','utf8');new Function(s.match(/<script>([\s\S]*?)<\/script>/)[1]);console.log('OK')"` | Checks that the embedded script still parses |
+| `npm install --no-save playwright@1.63.0 && npx playwright install --with-deps` | Installs the acceptance tooling on demand |
+| `node tests/browser/acceptance.mjs` | Acceptance in all three engine families. Pass `chromium`, `firefox` or `webkit` to run just one |
+| `node scripts/social-card.mjs` | Renders `social-card.jpg` from `design/social-card/social-card.html` at exactly the 1200x630 the meta tags declare |
+| `python3 -m http.server 8000` | Serves the page locally |
+
+Both halves of the suite run in CI, each gated to the paths it can actually observe: `validate.yml`
+watches `index.html` and `tests/**`, and `browser-acceptance.yml` watches `index.html` and
+`tests/browser/**`, with the Playwright version pinned so a cache hit always means the same browser
+builds.
+
+## 🔐 Secrets and variables
+
+**This project has none.** There is no backend, account, build step, dependency, signing identity,
+environment variable or GitHub Actions secret — publication is a push to `main`, and neither
+workflow reads anything but the checked-out files. Every repository file is served publicly by
+GitHub Pages, so credentials and private data must never be added to the project.
 
 ## What happens in there
-
-Every light is a person with a temperament: how steady it is, how much company it wants, how hard
-it feels what happens to it. Some carry a divergent trait — restless, single-minded, easily
-overwhelmed, self-regulating. All of it is simulated, so what a light does can be traced to what
-happened to it.
 
 - **Energy** runs from −1 to +1 and drifts with experience. Opposites attract, like repels like, and
   the colour of a light is its charge.
@@ -68,67 +117,22 @@ Chrome's Google voices are deliberately skipped. On macOS the Enhanced and Premi
 sound markedly better than the compact ones. Without a local English voice the lines are still
 written on screen and the piece simply stays silent.
 
-## Running it locally
-
-No build, no dependencies. Serve the folder over HTTP so the audio loads:
-
-```bash
-python3 -m http.server 8000
-```
-
-Then open <http://localhost:8000>.
-
-## Validation
-
-Two halves, so the cheap one can run on everything and the slow one only when it has something to
-look at. Neither is a dependency of the page.
-
-Regressions, with nothing installed:
-
-```bash
-node --test
-```
-
-The embedded JavaScript parses:
-
-```bash
-node -e "const s=require('fs').readFileSync('index.html','utf8');new Function(s.match(/<script>([\\s\\S]*?)<\\/script>/)[1]);console.log('OK')"
-```
-
-Acceptance in the three engine families, which needs Playwright installed on demand:
-
-```bash
-npm install --no-save playwright@1.63.0 && npx playwright install --with-deps
-```
-
-```bash
-node tests/browser/acceptance.mjs
-```
-
-Pass an engine name — `chromium`, `firefox` or `webkit` — to run just one. Both halves run in CI,
-each gated to the paths it can actually observe.
-
 ## Social card
 
 The link-preview card is generated from `design/social-card/social-card.html`, whose sky is a real
-frame of the piece:
-
-```bash
-node scripts/social-card.mjs
-```
-
-The HTML stays the source; `social-card.jpg` is written from it at exactly the 1200x630 the meta
-tags declare, and is never edited by hand.
-
-## Security
-
-There is no backend, account, dependency or secret configuration. Every repository file is served
-publicly by GitHub Pages, so credentials and private data must never be added to the project.
+frame of the piece. The HTML stays the source; `social-card.jpg` is written from it by
+`node scripts/social-card.mjs` and is never edited by hand.
 
 ## Privacy
 
 Everything runs in your browser. Nothing is sent anywhere, there is no analytics, no account and no
 server. The only thing stored is your three volume levels, in `localStorage`.
+
+## Contributing
+
+Bug reports, ideas and patches are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). The working
+agreements for this repository — its patterns, test ownership and Git policy — are in
+[AGENTS.md](AGENTS.md).
 
 ## Limitations
 
@@ -136,11 +140,15 @@ server. The only thing stored is your three volume levels, in `localStorage`.
   may be none.
 - English only. The written lines are the work, and translating them would produce a different piece.
 - Tuned for a desktop-sized window; it runs on a phone but the field gets crowded.
+- The world nearly pauses while the tab is hidden, because the browser throttles its timer, and it
+  resumes without compensating for the time that passed.
+- Node tests do not substitute for the real-browser checks, and neither substitutes for human
+  judgement on screen-reader behaviour, listening quality and comfort under reduced motion.
 
 ## License and attribution
 
-This work is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+[CC BY 4.0](LICENSE) © 2026 Marton Paulo.
 
-The background track is "Space ambient mix.mp3" by Almusic34, also CC BY 4.0, via the
-[Free Music Archive](https://freemusicarchive.org/music/almusic34/single/space-ambient-mixmp3).
-See [NOTICE.md](NOTICE.md).
+The background track is "Space ambient mix.mp3" by Almusic34, also CC BY 4.0, via the [Free Music Archive](https://freemusicarchive.org/music/almusic34/single/space-ambient-mixmp3).
+
+Third-party notices in [NOTICE.md](NOTICE.md).
