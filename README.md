@@ -26,8 +26,7 @@ locally, and the only thing ever stored is your three volume levels.
 
 <br />
 
-## Quick Start
-
+## 🌱 Quick Start
 No build, no dependencies. Serve the folder over HTTP so the audio loads:
 
 ```bash
@@ -40,8 +39,7 @@ Sound starts only after you interact with the page.
 
 <br />
 
-## Commands
-
+## 🛠 Commands
 There is no package manifest and no install step. Every command below is optional tooling, never a
 dependency of the page.
 
