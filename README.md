@@ -1,6 +1,6 @@
 # Lights
 
-Forty points of light drift, bond, age and speak in a dark field.
+Each light has a temper, a friend and a rival. They drift together, fall out, grow old and fade in the dark, and speak when you touch one.
 
 **[Open it →](https://lights.martonpaulo.com/)**
 
