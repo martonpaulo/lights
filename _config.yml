@@ -17,5 +17,5 @@ exclude:
   - package.json
   - package-lock.json
   - scripts/
-  - social-card.svg
+  - design/
   - tests/

@@ -1,0 +1,51 @@
+<!doctype html>
+<!-- Lights social card. Source of truth for social-card.jpg, served at
+     https://lights.martonpaulo.com/social-card.jpg (1200x630). Never edit the JPEG.
+     Render on a Mac (the drawn interface uses the system font): node scripts/social-card.mjs
+     System, grid and contrast rules: the social card standard (skill-deck#261).
+     Fonts: Gabarito and Figtree (OFL, fonts/*-OFL.txt), the typefaces of martonpaulo.com. -->
+<meta charset="utf-8">
+<title>Lights social card</title>
+<style>
+@font-face { font-family: "Gabarito"; font-weight: 700; src: url(fonts/gabarito-latin-700-normal.woff2); }
+@font-face { font-family: "Figtree"; font-weight: 400; src: url(fonts/figtree-latin-400-normal.woff2); }
+@font-face { font-family: "Figtree"; font-weight: 500; src: url(fonts/figtree-latin-500-normal.woff2); }
+@font-face { font-family: "Figtree"; font-weight: 600; src: url(fonts/figtree-latin-600-normal.woff2); }
+@font-face { font-family: "Figtree"; font-weight: 700; src: url(fonts/figtree-latin-700-normal.woff2); }
+html, body { margin: 0; }
+.card { position: relative; width: 1200px; height: 630px; overflow: hidden; font-family: "Figtree", sans-serif;
+        color: var(--ink); background: var(--gradient); }
+.card::before { content: ""; position: absolute; inset: 0; background: var(--glow, none); }
+/* One grid for every card: the copy block is centred vertically in a 440px column at x=96;
+   the product visual always starts at x=600, a fixed gutter. */
+.copy { position: absolute; left: 96px; top: 50%; transform: translateY(-50%); width: 440px; z-index: 2; }
+.icon { width: 104px; height: 104px; display: block; margin-bottom: 30px; filter: drop-shadow(0 16px 26px rgba(0,0,0,.22)); }
+.eyebrow { display: inline-block; margin: 0 0 20px; padding: 8px 16px; border-radius: 999px;
+           background: var(--pill-bg); border: 1px solid var(--pill-line);
+           font-weight: 700; font-size: 19px; letter-spacing: .1em; text-transform: uppercase; }
+h1 { margin: 0; font: 700 88px/1 "Gabarito", sans-serif; letter-spacing: -0.03em; }
+.promise { margin: 20px 0 0; font-weight: 500; font-size: 38px; line-height: 1.2; letter-spacing: -0.01em;
+           color: var(--ink-soft); text-wrap: balance; }
+.domain { margin: 34px 0 0; font-size: 24px; font-weight: 500; color: var(--ink-soft); }
+/* The drawn interface: the system font, the way the real app renders. */
+.ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; color: #1f2937; }
+.win { position: absolute; background: #fff; border-radius: 22px;
+       box-shadow: 0 40px 80px rgba(15,23,42,.30), 0 8px 20px rgba(15,23,42,.12); }
+.bar { height: 11px; border-radius: 6px; background: #e5e7eb; }
+
+.card { --gradient: #05080d; --glow: none; --ink: #fff; --ink-soft: rgba(255,255,255,.9);
+        --pill-bg: rgba(255,255,255,.1); --pill-line: rgba(255,255,255,.3); }
+.field{position:absolute;left:500px;top:0;width:700px;height:630px;background:url(field.jpg) center/cover;
+ -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 34%);mask-image:linear-gradient(90deg,transparent 0,#000 34%)}
+.card{background:#05080d radial-gradient(700px 520px at 78% 40%,#16090c 0%,transparent 70%)}
+</style>
+<div class="card">
+  <div class="copy">
+    <img class="icon" src="../../favicon.svg" alt="">
+    <p class="eyebrow">Generative art</p>
+    <h1>Lights</h1>
+    <p class="promise">A small society of lights in the dark</p>
+    <p class="domain">lights.martonpaulo.com</p>
+  </div>
+  <div class="field"></div>
+</div>
