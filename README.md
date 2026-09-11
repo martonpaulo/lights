@@ -24,6 +24,8 @@ locally, and the only thing ever stored is your three volume levels.
 
 ---
 
+<br />
+
 ## 🌱 Quick Start
 
 No build, no dependencies. Serve the folder over HTTP so the audio loads:
