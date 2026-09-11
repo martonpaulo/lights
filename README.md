@@ -1,12 +1,10 @@
 # Lights
 
+![Lights: a field of glowing lights, each with a temper, a friend and a rival](social-card.jpg)
+
 Each light has a temper, a friend and a rival. They drift together, fall out, grow old and fade in the dark, and speak when you touch one.
 
 **[Open it →](https://lights.martonpaulo.com/)**
-
-![The field with one light selected: the caption reads The Listener, Sofia, 38, Steady, and the
-line "Well... there is a rhythm in you I recognize." The guide is open on the left beside the music,
-voices and effects sliders.](docs/images/field.webp)
 
 ## What happens in there
 
