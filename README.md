@@ -34,6 +34,8 @@ python3 -m http.server 8000
 
 Then open <http://localhost:8000>. Sound starts only after you interact with the page.
 
+<br />
+
 ## 🛠 Commands
 
 There is no package manifest and no install step. Every command below is optional tooling, never a
@@ -53,12 +55,16 @@ watches `index.html` and `tests/**`, and `browser-acceptance.yml` watches `index
 `tests/browser/**`, with the Playwright version pinned so a cache hit always means the same browser
 builds.
 
+<br />
+
 ## 🔐 Secrets and variables
 
 **This project has none.** There is no backend, account, build step, dependency, signing identity,
 environment variable or GitHub Actions secret — publication is a push to `main`, and neither
 workflow reads anything but the checked-out files. Every repository file is served publicly by
 GitHub Pages, so credentials and private data must never be added to the project.
+
+<br />
 
 ## What happens in there
 
@@ -77,6 +83,8 @@ GitHub Pages, so credentials and private data must never be added to the project
   with a fresh name and history.
 - **The field is read back** as a society every half minute: polarised, fragmented, crowded, feuding,
   learning, or settling into clusters found by k-means.
+
+<br />
 
 ## Using it
 
@@ -109,6 +117,8 @@ highlight each item**, which is that browser's own default rather than something
 Sound starts only after you interact, and the panel controls music, voices and effects separately.
 Levels persist in your browser.
 
+<br />
+
 ## Requirements
 
 A current browser with Canvas 2D, Web Audio and Web Speech. Only voices your operating system
@@ -117,22 +127,30 @@ Chrome's Google voices are deliberately skipped. On macOS the Enhanced and Premi
 sound markedly better than the compact ones. Without a local English voice the lines are still
 written on screen and the piece simply stays silent.
 
+<br />
+
 ## Social card
 
 The link-preview card is generated from `design/social-card/social-card.html`, whose sky is a real
 frame of the piece. The HTML stays the source; `social-card.jpg` is written from it by
 `node scripts/social-card.mjs` and is never edited by hand.
 
+<br />
+
 ## Privacy
 
 Everything runs in your browser. Nothing is sent anywhere, there is no analytics, no account and no
 server. The only thing stored is your three volume levels, in `localStorage`.
+
+<br />
 
 ## Contributing
 
 Bug reports, ideas and patches are welcome: see [CONTRIBUTING.md](CONTRIBUTING.md). The working
 agreements for this repository — its patterns, test ownership and Git policy — are in
 [AGENTS.md](AGENTS.md).
+
+<br />
 
 ## Limitations
 
@@ -144,6 +162,8 @@ agreements for this repository — its patterns, test ownership and Git policy �
   resumes without compensating for the time that passed.
 - Node tests do not substitute for the real-browser checks, and neither substitutes for human
   judgement on screen-reader behaviour, listening quality and comfort under reduced motion.
+
+<br />
 
 ## License and attribution
 
