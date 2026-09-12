@@ -1,0 +1,62 @@
+name: Bug report
+description: Report something in Lights that does not work the way it should.
+title: "bug: "
+labels: ["type: bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Rendering, audio and speech differ sharply between Chromium, Gecko and WebKit, so naming the
+        engine is usually what makes a report actionable.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Say whether it reproduces on a fresh reload, and anything the browser console printed.
+      placeholder: |
+        1. Open the field…
+        2. Wait for…
+        3. Observe…
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and operating system
+      placeholder: Firefox 141 on macOS 26
+    validations:
+      required: true
+
+  - type: dropdown
+    id: sound
+    attributes:
+      label: Was sound enabled?
+      options:
+        - Yes, sound was on
+        - No, sound was off
+        - Not relevant to this report
+    validations:
+      required: true
+
+  - type: input
+    id: voices
+    attributes:
+      label: Installed system voices
+      description: Only for anything about speech — which voices your system offers.
+      placeholder: e.g. Samantha, Daniel
