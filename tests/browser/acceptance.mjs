@@ -346,7 +346,7 @@ async function runEngine(name, launcher, url) {
       head.lang === 'en' && head.title && head.h1.length === 1 && ordered
       && /^https:\/\/lights\.martonpaulo\.com\/$/.test(head.canonical)
       && head.description && head.themeColor
-      && /\.png$/.test(head.ogImage) && head.ogType === 'image/png'
+      && /\.jpg$/.test(head.ogImage) && head.ogType === 'image/jpeg'
       && head.ogWidth === '1200' && head.ogHeight === '630' && head.ogAlt
       && head.twitterCard === 'summary_large_image' && head.twitterImage === head.ogImage && head.twitterAlt
       && card[0] === 1200 && card[1] === 630
