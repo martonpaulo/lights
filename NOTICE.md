@@ -12,7 +12,7 @@ the license, and indicate whether changes were made.
 
 ### Background audio
 
-- File: `space-ambient-mix.mp3`
+- File: `site/space-ambient-mix.mp3`
 - Title: "Space ambient mix.mp3"
 - Author: Almusic34
 - Source: [Free Music Archive](https://freemusicarchive.org/music/almusic34/single/space-ambient-mixmp3)

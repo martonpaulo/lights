@@ -11,7 +11,7 @@ import { dirname, join } from 'node:path';
 import vm from 'node:vm';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-export const PAGE = join(ROOT, 'index.html');
+export const PAGE = join(ROOT, 'site', 'index.html');
 
 /** The identifiers the tests observe. Anything else stays private to the page. */
 const EXPOSED = [

@@ -17,7 +17,7 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'site');
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.svg': 'image/svg+xml',

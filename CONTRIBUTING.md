@@ -2,7 +2,7 @@
 
 Thanks for looking. Lights is deliberately small: **one HTML file, no build step, no dependencies,
 no backend**. Keeping it that way is a feature, so the most useful contributions are the ones that
-fit inside `index.html` without adding machinery around it.
+fit inside `site/index.html` without adding machinery around it.
 
 Read [AGENTS.md](AGENTS.md) first. It is the working agreement for this repository — the patterns
 the code repeats, what belongs in the simulation loop versus the render loop, how tests are owned,
@@ -45,7 +45,7 @@ announces what the cursor is on, and it stays that way.
   cooldown (#54)`. Use the issue number, never the pull request's.
 - Merges keep every commit: `gh pr merge <number> --merge --delete-branch`. **Never squash.**
 - Small changes go straight to `main`. Branch when a change is large enough to want review before it
-  reaches the live page — a push to `main` publishes, because GitHub Pages redeploys automatically.
+  reaches the live page — a push to `main` publishes, because `deploy.yml` redeploys `site/` once `Validate` passes.
 - Add or update a focused test for changed behaviour, and never commit secrets, caches or build
   output. There is no `CHANGELOG.md`: the product has no versions or releases, and Git history is
   the record.
@@ -57,15 +57,13 @@ The same two halves that CI runs, in the same order.
 Cheap, with nothing installed:
 
 ```bash
-node --test
+pnpm validate
 ```
 
-```bash
-node -e "const s=require('fs').readFileSync('index.html','utf8');new Function(s.match(/<script>([\s\S]*?)<\/script>/)[1]);console.log('OK')"
-```
-
-Those are what [`.github/workflows/validate.yml`](.github/workflows/validate.yml) runs, gated on
-`index.html` and `tests/**`.
+It checks that the script embedded in `site/index.html` parses, then runs `node --test`. That is what
+[`.github/workflows/validate.yml`](.github/workflows/validate.yml) runs, gated on `site/**`, `tests/**`
+and the checking script; a successful run on `main` starts
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which publishes `site/`.
 
 Real engines, with the checking tool installed on demand — never a project dependency, and
 `node_modules/` is ignored:
@@ -77,9 +75,9 @@ node tests/browser/acceptance.mjs
 
 Pass `chromium`, `firefox` or `webkit` to run a single engine.
 [`.github/workflows/browser.yml`](.github/workflows/browser.yml) runs all
-three as a matrix, gated on `index.html` and `tests/browser/**`, with the Playwright version pinned.
+three as a matrix, gated on `site/**` and `tests/browser/**`, with the Playwright version pinned.
 
-Serve the page while you work with `python3 -m http.server 8000`.
+Serve the page while you work with `python3 -m http.server 8000 --directory site`.
 
 Neither suite substitutes for human judgement on screen-reader behaviour, listening quality or
 comfort under reduced motion. If you could not check something, say so in the pull request rather

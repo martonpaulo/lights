@@ -1,19 +1,25 @@
 # The cheap half of the pipeline: nothing to install, seconds to run.
 # It answers "does the embedded script still parse, and do the regressions hold",
-# so it runs whenever the page or a test changes.
+# so it runs whenever the site, a test or the checking script changes. A
+# successful run on main starts `deploy.yml`, so every published change under
+# `site/` is watched here.
 name: Validate
 
 on:
   push:
     branches: [main]
     paths:
-      - index.html
+      - site/**
       - tests/**
+      - scripts/check-embedded-script.mjs
+      - package.json
       - .github/workflows/validate.yml
   pull_request:
     paths:
-      - index.html
+      - site/**
       - tests/**
+      - scripts/check-embedded-script.mjs
+      - package.json
       - .github/workflows/validate.yml
   workflow_dispatch:
 
@@ -30,15 +36,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
 
-      - name: The embedded script parses
-        run: |
-          node -e "const s=require('fs').readFileSync('index.html','utf8');
-          new Function(s.match(/<script>([\s\S]*?)<\/script>/)[1]);
-          console.log('embedded script parses')"
-
-      - name: Regression tests
-        run: node --test
+      - name: Validate
+        run: pnpm validate

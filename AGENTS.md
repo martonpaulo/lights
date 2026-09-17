@@ -7,17 +7,17 @@
 - Benefit-first description: A dark field where forty points of light drift, bond, age and speak, so watching it rewards attention instead of asking for it.
 - Repository: `martonpaulo/lights` (public)
 - Public identifiers: none. The product is a single static page served at its landing page URL; there is no package, module, or bundle identifier.
-- Landing page: https://lights.martonpaulo.com/ — GitHub Pages, served from `main` at the repository root. The landing page is the product; there is no separate marketing site.
+- Landing page: https://lights.martonpaulo.com/ — GitHub Pages, published from `site/` on `main` by `.github/workflows/deploy.yml`. The landing page is the product; there is no separate marketing site.
 - License: `CC-BY-4.0`
 - Copyright: 2026 Marton Paulo
 - Development language: English.
 - Product copy: English only, no localization. The written lines are the work itself, and installed speech voices outside English are markedly worse. Revisit only as an explicit migration.
 - Branch policy: work directly on `main`. Branch only when a change is large enough to want review before it reaches the live page.
 - Commit policy: commit only when explicitly requested.
-- Push policy: push only when explicitly requested. A push publishes: GitHub Pages redeploys `main` automatically.
+- Push policy: push only when explicitly requested. A push publishes: once `Validate` passes on `main`, `deploy.yml` redeploys `site/`.
 - Product versioning: none. The product has no user-visible version, no `CHANGELOG.md`, no tags, and no releases. Git history is the record.
 - Browser acceptance: Chromium, Gecko and WebKit. Validate behavior in all three engine families; report unavailable engines and human-only checks explicitly.
-- Agent automation: `disabled`. Continuous integration is two path-gated GitHub Actions workflows that only check the page; nothing deploys, releases or writes to the repository.
+- Agent automation: `disabled`. Continuous integration is two path-gated GitHub Actions workflows that only check the page, and `deploy.yml` publishes `site/` to GitHub Pages after `Validate` passes on `main`; nothing releases or writes to the repository.
 - Agent clients: Codex, Claude and Antigravity CLI. `AGENTS.md` is canonical; `CLAUDE.md` is a relative symlink to it. Antigravity CLI (`agy` 1.1.27) uses the root `AGENTS.md`; root-guidance loading was observed during setup on 2026-09-09 (browser families and automation state). Formal collection verification remains pending because it requires a project-local skill file, which this repository does not own. The legacy `.gemini/rules/agents.md` link is not an active adapter for these selected clients.
 - Default-branch approving review: not required for the manual, direct-to-`main` workflow. Automated merging is not configured.
 - Regression tests: separate persistent `node:test` files are allowed without dependencies. The application remains one HTML file; test files are not runtime modules.
@@ -59,7 +59,7 @@ not yet satisfy them; do not weaken a contract to hide an implementation gap. A 
 break a recorded contract or establish a new pattern stops and asks first, naming the existing
 pattern, the proposed one, and why the existing one does not fit.
 
-- **One file, three layers.** `index.html` holds markup, a single `<style>` block, and a single
+- **One file, three layers.** `site/index.html` holds markup, a single `<style>` block, and a single
   `<script>`. No build step, no modules, no dependencies. A second file needs a reason stronger than
   tidiness. The owner-approved exception is separate dependency-free regression tests.
 - **Two loops.** `simulationStep()` on a 16 ms `setInterval` owns world time, physics and state;
@@ -183,20 +183,20 @@ Follow the active workflow's authority: a proposed follow-up does not authorize 
 
 ## Test ownership and commands
 
-The product has no build step or package dependencies. The checks come in two halves, and the
+The product has no build step or package dependencies. `package.json` only names the tasks: `pnpm validate` is the cheap half and the CI gate, `pnpm test:browser` the expensive one. The checks come in two halves, and the
 pipeline is gated so each runs only when something it can observe has changed.
 
 - **Cheap, nothing installed.** `node --test` runs the regressions under `tests/`, which load the
   real `index.html` through `tests/harness.js` — a `vm` context with a virtual clock, a DOM built
   from the page's own markup, and switchable Web Speech and Web Audio globals. `index.html` ships no
   test hooks. Tests exercise observable simulation transitions and browser API boundaries, not
-  source-text snapshots, duplicated constants or private implementation wiring. The embedded-script
-  syntax command in `README.md` runs alongside them. Workflow: `.github/workflows/validate.yml`,
-  gated on `index.html` and `tests/**`.
-- **Expensive, real engines.** `node tests/browser/acceptance.mjs [engine]` serves the folder and
+  source-text snapshots, duplicated constants or private implementation wiring. `scripts/check-embedded-script.mjs`
+  checks that the embedded script parses and runs first. Both run as `pnpm validate`. Workflow:
+  `.github/workflows/validate.yml`, gated on `site/**`, `tests/**` and the checking script.
+- **Expensive, real engines.** `node tests/browser/acceptance.mjs [engine]` serves `site/` and
   drives Chromium, Gecko and WebKit. Playwright is a checking tool installed on demand, never a
   project dependency and never loaded by the page; `node_modules/` is ignored. Workflow:
-  `.github/workflows/browser.yml`, gated on `index.html` and `tests/browser/**` and
+  `.github/workflows/browser.yml`, gated on `site/**` and `tests/browser/**` and
   pinned to one Playwright version so a cache hit means the same browser builds.
 
 Node tests do not substitute for the rendered checks, and neither substitutes for the human

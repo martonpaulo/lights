@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="social-card.jpg" width="100%" alt="Lights: a field of glowing lights, each with a temper, a friend and a rival">
+<img src="site/social-card.jpg" width="100%" alt="Lights: a field of glowing lights, each with a temper, a friend and a rival">
 
 # Lights
 
@@ -33,12 +33,12 @@ No build step, no dependencies: a static file server and a current browser are a
 ```bash
 git clone https://github.com/martonpaulo/lights.git
 cd lights
-python3 -m http.server 8000
+python3 -m http.server 8000 --directory site
 ```
 
 [http://localhost:8000](http://localhost:8000)
 
-Serve the folder over HTTP rather than opening `index.html` from disk, so the audio loads.
+Serve `site/` over HTTP rather than opening `site/index.html` from disk, so the audio loads.
 
 Sound starts only after you interact with the page.
 
@@ -48,14 +48,13 @@ Sound starts only after you interact with the page.
 
 | Command | What it does |
 | --- | --- |
-| `node --test` | Runs the regression suite in `tests/`, loading the real `index.html` through `tests/harness.js`. |
-| `node -e "const s=require('fs').readFileSync('index.html','utf8');new Function(s.match(/<script>([\s\S]*?)<\/script>/)[1]);console.log('OK')"` | Checks that the embedded script still parses, the other half of the CI gate. |
-| `python3 -m http.server 8000` | Serves the page locally. |
+| `pnpm validate` | The CI gate: checks that the script embedded in `site/index.html` still parses (`scripts/check-embedded-script.mjs`), then runs the regression suite in `tests/` (`node --test`), which loads the real page through `tests/harness.js`. Needs no install. |
+| `python3 -m http.server 8000 --directory site` | Serves the page locally. |
 | `npm install --no-save playwright@1.63.0 && npx playwright install --with-deps` | Installs the acceptance tooling on demand. |
-| `node tests/browser/acceptance.mjs` | Runs acceptance in all three engine families. Pass `chromium`, `firefox` or `webkit` to run just one. |
-| `node scripts/social-card.mjs` | Renders `social-card.jpg` from `design/social-card/social-card.html` at exactly the 1200x630 the meta tags declare. |
+| `pnpm test:browser` | Runs `node tests/browser/acceptance.mjs`: acceptance in all three engine families. Run `node tests/browser/acceptance.mjs chromium` (or `firefox`, `webkit`) for just one. |
+| `node scripts/social-card.mjs` | Renders `site/social-card.jpg` from `design/social-card/social-card.html` at exactly the 1200x630 the meta tags declare. |
 
-Every command is optional tooling run from the repository root: there is no package manifest and no install step the page depends on.
+Every command is optional tooling run from the repository root. `package.json` only names these tasks: it has no dependencies, and the page depends on no install step. Everything the site serves lives in `site/`.
 
 ---
 
@@ -127,7 +126,7 @@ written on screen and the piece simply stays silent.
 ## Social card
 
 The link-preview card is generated from `design/social-card/social-card.html`, whose sky is a real
-frame of the piece. The HTML stays the source; `social-card.jpg` is written from it by
+frame of the piece. The HTML stays the source; `site/social-card.jpg` is written from it by
 `node scripts/social-card.mjs` and is never edited by hand.
 
 <br />
@@ -146,7 +145,7 @@ agreements for this repository â€” its patterns, test ownership and Git policy â
 [AGENTS.md](AGENTS.md).
 
 Both halves of the suite run in CI, each gated to the paths it can actually observe: `validate.yml`
-watches `index.html` and `tests/**`, and `browser.yml` watches `index.html` and
+watches `site/**` and `tests/**`, and `browser.yml` watches `site/**` and
 `tests/browser/**`, with the Playwright version pinned so a cache hit always means the same browser
 builds.
 

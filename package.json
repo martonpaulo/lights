@@ -1,0 +1,11 @@
+{
+  "name": "lights",
+  "private": true,
+  "license": "CC-BY-4.0",
+  "type": "module",
+  "packageManager": "pnpm@11.7.0",
+  "scripts": {
+    "validate": "node scripts/check-embedded-script.mjs && node --test",
+    "test:browser": "node tests/browser/acceptance.mjs"
+  }
+}

@@ -53,7 +53,7 @@ qualitative — whether a viewer selects a second light after the first one spea
 
 ## Constraints
 
-- **One static file.** `index.html` carries the markup, styles and simulation. No build step, no
+- **One static file.** `site/index.html` carries the markup, styles and simulation. No build step, no
   bundler, no dependencies, so it can be opened from disk or served by GitHub Pages unchanged.
 - **Browser platform only.** Canvas 2D, Web Audio and Web Speech, degrading quietly where a browser
   lacks one.
