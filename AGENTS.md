@@ -2,8 +2,10 @@
 
 ## Project identity and policy
 
-- Project name: `lights`
-- Public name: `Lights`
+- Display name: `Lights`
+- Code name: `Lights`
+- Slug: `lights`
+- Identifier name: `lights`
 - Benefit-first description: A dark field where forty points of light drift, bond, age and speak, so watching it rewards attention instead of asking for it.
 - Repository: `martonpaulo/lights` (public)
 - Public identifiers: none. The product is a single static page served at its landing page URL; there is no package, module, or bundle identifier.
@@ -149,7 +151,7 @@ pattern, the proposed one, and why the existing one does not fit.
 - Durable documentation describes responsibilities, contracts, invariants, commands, and decisions. Audits cite exact evidence. Manuals use exact filenames only when users must act on them and the names are stable contracts.
 - Update the smallest canonical documentation section when a durable contract changes. Do not create empty documentation for possible future use.
 - Keep the README easy to scan. Cover benefit, behavior, requirements, setup, usage, validation, security, privacy, limitations, landing page, and download where applicable.
-- Use the recorded public name as the README H1 and preserve its branding and casing.
+- Use the recorded display name as the README H1 and preserve its branding and casing.
 - Give every new or materially edited fenced block its real language identifier, or `text` for plain output; preserve unrelated historical content.
 - Use badges, real screenshots, statistics, and emoji only when they improve comprehension and can remain current.
 - Preserve third-party licenses, copyright, attribution, and notices. Maintain `NOTICE.md` or the established attribution file when required.
