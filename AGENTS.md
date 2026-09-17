@@ -17,7 +17,7 @@
 - Push policy: push only when explicitly requested. A push publishes: once `Validate` passes on `main`, `deploy.yml` redeploys `site/`.
 - Product versioning: none. The product has no user-visible version, no `CHANGELOG.md`, no tags, and no releases. Git history is the record.
 - Browser acceptance: Chromium, Gecko and WebKit. Validate behavior in all three engine families; report unavailable engines and human-only checks explicitly.
-- Agent automation: `disabled`. Continuous integration is two path-gated GitHub Actions workflows that only check the page, and `deploy.yml` publishes `site/` to GitHub Pages after `Validate` passes on `main`; nothing releases or writes to the repository.
+- Continuous integration: two path-gated GitHub Actions workflows that only check the page, and `deploy.yml` publishes `site/` to GitHub Pages after `Validate` passes on `main`; nothing releases or writes to the repository.
 - Agent clients: Codex, Claude and Antigravity CLI. `AGENTS.md` is canonical; `CLAUDE.md` is a relative symlink to it. Antigravity CLI (`agy` 1.1.27) uses the root `AGENTS.md`; root-guidance loading was observed during setup on 2026-09-09 (browser families and automation state). Formal collection verification remains pending because it requires a project-local skill file, which this repository does not own. The legacy `.gemini/rules/agents.md` link is not an active adapter for these selected clients.
 - Default-branch approving review: not required for the manual, direct-to-`main` workflow. Automated merging is not configured.
 - Regression tests: separate persistent `node:test` files are allowed without dependencies. The application remains one HTML file; test files are not runtime modules.
