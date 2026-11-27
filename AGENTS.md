@@ -28,8 +28,9 @@
 - Commit subject: a commit made for an issue ends with `(#<issue number>)`.
 - Delete branches after merge: enabled.
 - Release, signing, and secret-storage policy: Not applicable. There is no build, artifact, signing identity, or secret; publication is a push to `main`.
-- Skills baseline revision: `52a750a90f2a761592388dba46b50b0238e3964d`
+- Skills baseline revision: `120b49891c76cff9576f1383eead52ef877e21a3`
 - Skills baseline applied: `2026-11-27`
+- Skills baseline divergence `text-width` at `120b49891c76cff9576f1383eead52ef877e21a3`: the page is one full-bleed canvas with `overflow: hidden` that never scrolls, so `scrollbar-gutter: stable` would only reserve an empty strip beside the canvas where scrollbars take space; no text has a width cap of its own (agent assumption in a cloud run, reversible, [#21](https://github.com/martonpaulo/lights/issues/21)).
 
 Treat these values as stable project decisions. Change an established identifier, license, visibility, branch policy, versioning model, localization strategy, landing-page contract, agent-automation decision, or release policy only through an explicit task that describes the migration and downstream effects.
 
