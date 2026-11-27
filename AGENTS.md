@@ -17,7 +17,7 @@
 - Product copy: English only, no localization. The written lines are the work itself, and installed speech voices outside English are markedly worse. Revisit only as an explicit migration.
 - Branch policy: work directly on `main`. Branch only when a change is large enough to want review before it reaches the live page.
 - Commit policy: commit only when explicitly requested.
-- Push policy: push only when explicitly requested. A push publishes: once `Validate` passes on `main`, `deploy.yml` redeploys `site/`.
+- Push policy: push only when explicitly requested. A push publishes: once `Validate` passes on `main`, `deploy.yml` redeploys `site/`. A cloud session pushes `main` too, only for a `runs: cloud` issue whose gates all ran there (owner, 2026-11-27). Cloud setup command: `bash scripts/cloud-setup.sh`.
 - Product versioning: none. The product has no user-visible version, no `CHANGELOG.md`, no tags, and no releases. Git history is the record.
 - Browser acceptance: Chromium, Gecko and WebKit. Validate behavior in all three engine families; report unavailable engines and human-only checks explicitly.
 - Continuous integration: two path-gated GitHub Actions workflows that only check the page, and `deploy.yml` publishes `site/` to GitHub Pages after `Validate` passes on `main`; nothing releases or writes to the repository.
