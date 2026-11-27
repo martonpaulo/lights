@@ -74,6 +74,30 @@ const findLights = (page, count) => page.evaluate((wanted) => {
   return spots.sort((a, b) => b.lum - a.lum).slice(0, wanted).map((spot) => [spot.x, spot.y]);
 }, count);
 
+/**
+ * Waits for a condition the page itself reaches, with a deadline, and reports
+ * whether it was reached. Callers read the state afterwards, so a miss shows up
+ * as a failed check with the real value, not as a hang.
+ */
+const until = (page, condition, argument = null, timeout = 5000) =>
+  page.waitForFunction(condition, argument, { timeout }).then(() => true, () => false);
+
+/** Resolves after the page has drawn `count` more animation frames. */
+const frames = (page, count = 2) => page.evaluate((wanted) => new Promise((resolve) => {
+  let left = wanted;
+  const tick = () => (--left <= 0 ? resolve() : requestAnimationFrame(tick));
+  requestAnimationFrame(tick);
+}), count);
+
+/** True once the canvas holds at least `wanted` bright pixels (red channel over 150). */
+const brightPixels = (wanted) => {
+  const canvas = document.querySelector('#c');
+  const { data } = canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, canvas.width, canvas.height);
+  let count = 0;
+  for (let at = 0; at < data.length; at += 4) if (data[at] > 150 && ++count >= wanted) return true;
+  return false;
+};
+
 async function open(browser, url, options = {}) {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, ...options });
   const problems = [];
@@ -89,7 +113,8 @@ async function open(browser, url, options = {}) {
   });
   if (options.initScript) await page.addInitScript(options.initScript);
   await page.goto(url, { waitUntil: 'load' });
-  await page.waitForTimeout(1200); // timing-dependent (#25): a fixed wait for the page to react
+  // The field is ready once a light has been drawn, which is what every check reads.
+  await until(page, brightPixels, 1, 15000);
   return { page, problems };
 }
 
@@ -121,8 +146,12 @@ async function runEngine(name, launcher, url) {
       },
     });
     const spots = await findLights(page, 6);
-    for (const [x, y] of spots) { await page.mouse.click(x, y); await page.waitForTimeout(250); } // timing-dependent (#25): a fixed wait for the page to react
-    await page.waitForTimeout(1500); // timing-dependent (#25): a fixed wait for the page to react
+    for (const [x, y] of spots) await page.mouse.click(x, y);
+    // A selection shows its card, then the page hands a line to the synthesizer.
+    // A machine with no local English voice never submits one, which is a pass.
+    if (await until(page, () => document.querySelector('#caption').classList.contains('visible'))) {
+      await until(page, () => (window.__submitted || []).length > 0, null, 4000);
+    }
     submitted.push(...await page.evaluate(() => window.__submitted || []));
     const ineligible = submitted.filter((item) => item.local !== true || !/^en([-_]|$)/i.test(item.lang || ''));
     check(name, 'speaks only with local English voices', ineligible.length === 0 && problems.length === 0,
@@ -140,14 +169,23 @@ async function runEngine(name, launcher, url) {
       if (picked.length) await page.keyboard.down('Meta');
       await page.mouse.click(x, y);
       if (picked.length) await page.keyboard.up('Meta');
-      await page.waitForTimeout(200); // timing-dependent (#25): a fixed wait for the page to react
+      // A hit adds a credit row at once; a miss adds none, so a short deadline settles it.
+      await until(page, (before) => document.querySelectorAll('#caption .credit').length > before, picked.length, 1500);
       const now = await credits();
       if (now.length > picked.length) picked = now;
       if (picked.length === 2) break;
     }
     const held = new Set(picked.map((line) => line.split(' · ')[0]));
-    const heard = new Set();
-    for (let i = 0; i < 20; i++) { await page.waitForTimeout(500); (await credits()).forEach((line) => heard.add(line.split(' · ')[0])); } // timing-dependent (#25): a fixed wait for the page to react
+    // Record every credit the caption ever shows, then wait until both selected
+    // lights have been heard, so a stranger speaking in between is still caught.
+    await page.evaluate(() => {
+      window.__heard = [];
+      const note = () => document.querySelectorAll('#caption .credit').forEach((el) => window.__heard.push(el.textContent.split(' · ')[0]));
+      new MutationObserver(note).observe(document.querySelector('#caption'), { childList: true, subtree: true });
+      note();
+    });
+    await until(page, (who) => who.every((name) => window.__heard.includes(name)), [...held], 15000);
+    const heard = new Set(await page.evaluate(() => window.__heard));
     const strangers = [...heard].filter((who) => !held.has(who));
     check(name, 'only the selected lights speak', picked.length === 2 && strangers.length === 0 && problems.length === 0,
       `held [${[...held]}], heard [${[...heard]}]`);
@@ -164,22 +202,30 @@ async function runEngine(name, launcher, url) {
     });
     const credits = () => page.evaluate(() => document.querySelectorAll('#caption .credit').length);
     await page.evaluate(() => document.querySelector('#c').focus());
-    for (let i = 0; i < 4; i++) { await page.keyboard.press('ArrowRight'); await page.waitForTimeout(60); } // timing-dependent (#25): a fixed wait for the page to react
-    const named = (await status()).trim().length > 0;
-    await page.keyboard.press('Enter'); await page.waitForTimeout(300); // timing-dependent (#25): a fixed wait for the page to react
+    for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight');
+    const named = await until(page, () => document.querySelector('#field-status').textContent.trim().length > 0);
+    await page.keyboard.press('Enter');
+    await until(page, () => document.querySelectorAll('#caption .credit').length === 1);
     const one = await credits();
-    const saysSelected = /selected/.test(await status());
-    await page.keyboard.press('ArrowRight'); await page.waitForTimeout(60); // timing-dependent (#25): a fixed wait for the page to react
-    await page.keyboard.press('Shift+Enter'); await page.waitForTimeout(300); // timing-dependent (#25): a fixed wait for the page to react
+    const saysSelected = await until(page, () => /selected/.test(document.querySelector('#field-status').textContent));
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Shift+Enter');
+    await until(page, () => document.querySelectorAll('#caption .credit').length === 2);
     const two = await credits();
-    await page.keyboard.press('Escape'); await page.waitForTimeout(200); // timing-dependent (#25): a fixed wait for the page to react
+    await page.keyboard.press('Escape');
+    await until(page, () => document.querySelectorAll('#caption .credit').length === 0);
     const cleared = await credits();
-    await page.keyboard.press('s'); await page.waitForTimeout(250); // timing-dependent (#25): a fixed wait for the page to react
+    await page.keyboard.press('s');
+    await until(page, () => document.activeElement && document.activeElement.dataset.summon);
     const menuFocus = await active();
-    await page.keyboard.press('ArrowDown'); await page.waitForTimeout(100); // timing-dependent (#25): a fixed wait for the page to react
-    await page.keyboard.press('Enter'); await page.waitForTimeout(400); // timing-dependent (#25): a fixed wait for the page to react
+    const firstItem = await page.evaluate(() => document.activeElement.dataset.summon);
+    await page.keyboard.press('ArrowDown');
+    await until(page, (before) => document.activeElement.dataset.summon !== before, firstItem);
+    await page.keyboard.press('Enter');
+    await until(page, () => document.activeElement && document.activeElement.id === 'c');
     const backToField = await active();
-    await page.keyboard.press('b'); await page.waitForTimeout(300); // timing-dependent (#25): a fixed wait for the page to react
+    await page.keyboard.press('b');
+    await frames(page, 3); // the detonation is drawn, and any error it raises has surfaced
     check(name, 'the field works from the keyboard alone',
       named && one === 1 && saysSelected && two === 2 && cleared === 0
       && menuFocus.startsWith('button') && backToField === 'c' && problems.length === 0,
@@ -227,7 +273,11 @@ async function runEngine(name, launcher, url) {
     const counts = [];
     for (const [width, height] of [[380, 700], [1440, 900], [900, 420], [320, 640], [1440, 900]]) {
       await page.setViewportSize({ width, height });
-      await page.waitForTimeout(1200); // timing-dependent (#25): a fixed wait for the page to react
+      await until(page, ([w, h]) => {
+        const canvas = document.querySelector('#c');
+        return canvas.width === w && canvas.height === h;
+      }, [width, height]);
+      await until(page, brightPixels, 201, 4000);
       counts.push(await lit());
     }
     check(name, 'no light is stranded by a resize', Math.min(...counts) > 200 && problems.length === 0,
@@ -248,8 +298,8 @@ async function runEngine(name, launcher, url) {
     for (const [mode, initScript] of Object.entries(modes)) {
       const { page, problems } = await open(browser, url, { initScript });
       const spots = await findLights(page, 4);
-      for (const [x, y] of spots) { await page.mouse.click(x, y); await page.waitForTimeout(150); } // timing-dependent (#25): a fixed wait for the page to react
-      await page.waitForTimeout(600); // timing-dependent (#25): a fixed wait for the page to react
+      for (const [x, y] of spots) await page.mouse.click(x, y);
+      await until(page, () => document.querySelector('#caption').classList.contains('visible'), null, 3000);
       const state = await page.evaluate(() => ({
         canvas: document.querySelector('#c').width,
         visible: document.querySelector('#caption').classList.contains('visible'),
@@ -282,7 +332,8 @@ async function runEngine(name, launcher, url) {
     };
     const sample = async (motion) => {
       const { page, problems } = await open(browser, url, { reducedMotion: motion, initScript: watch });
-      await page.waitForTimeout(1500); // timing-dependent (#25): a fixed wait for the page to react
+      // About a second and a half of drawing at 60 frames a second, counted in frames, not time.
+      await until(page, () => window.__camera.length >= 90, null, 15000);
       const seen = await page.evaluate(() => ({ camera: window.__camera, grain: [...new Set(window.__grain)] }));
       await page.close();
       return {
