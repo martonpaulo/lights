@@ -1,0 +1,33 @@
+{
+ "magicValues": {
+  "folders": [],
+  "exclude": [
+   "scripts/dry_check.py",
+   "scripts/issue_links.py",
+   "scripts/live_build_check.py",
+   "scripts/shortcut_check.py",
+   "scripts/sleep_guard.py",
+   "scripts/text_check.py",
+   "scripts/text_width_check.py",
+   "scripts/skd/**"
+  ],
+  "counts": {}
+ },
+ "duplicates": {
+  "depth": 1,
+  "exclude": [
+   "scripts/skd/**"
+  ],
+  "counts": {
+   "tests": 3
+  }
+ },
+ "documents": {
+  "files": [
+   "*.md",
+   "docs/**/*.md"
+  ],
+  "exclude": [],
+  "repeated": {}
+ }
+}

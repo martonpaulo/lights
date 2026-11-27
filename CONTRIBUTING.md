@@ -42,7 +42,7 @@ announces what the cursor is on, and it stays that way.
   `docs:`, `chore:`, `perf:`, with a scope where it helps (`fix(seo): …`).
 - One commit per concern. Do not split mechanically, and do not combine unrelated changes.
 - When the commit belongs to an issue, end the subject with its number: `feat: add the portal
-  cooldown (#54)`. Use the issue number, never the pull request's.
+  cooldown ([#54](https://github.com/martonpaulo/lights/issues/54))`. Use the issue number, never the pull request's.
 - Merges keep every commit: `gh pr merge <number> --merge --delete-branch`. **Never squash.**
 - Small changes go straight to `main`. Branch when a change is large enough to want review before it
   reaches the live page — a push to `main` publishes, because `deploy.yml` redeploys `site/` once `Validate` passes.

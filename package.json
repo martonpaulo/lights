@@ -5,7 +5,8 @@
   "type": "module",
   "packageManager": "pnpm@11.7.0",
   "scripts": {
-    "validate": "node scripts/check-embedded-script.mjs && node --test",
+    "validate": "node scripts/check-embedded-script.mjs && node --test && pnpm text-check",
+    "text-check": "python3 scripts/text_check.py . && python3 scripts/issue_links.py . && python3 scripts/dry_check.py && python3 scripts/sleep_guard.py . && python3 scripts/shortcut_check.py .",
     "test:browser": "node tests/browser/acceptance.mjs"
   }
 }

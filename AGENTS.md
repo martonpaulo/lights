@@ -6,6 +6,7 @@
 - Code name: `Lights`
 - Slug: `lights`
 - Identifier name: `lights`
+- Icon: `site/favicon.svg`
 - Benefit-first description: A dark field where forty points of light drift, bond, age and speak, so watching it rewards attention instead of asking for it.
 - Repository: `martonpaulo/lights` (public)
 - Public identifiers: none. The product is a single static page served at its landing page URL; there is no package, module, or bundle identifier.
@@ -27,8 +28,19 @@
 - Commit subject: a commit made for an issue ends with `(#<issue number>)`.
 - Delete branches after merge: enabled.
 - Release, signing, and secret-storage policy: Not applicable. There is no build, artifact, signing identity, or secret; publication is a push to `main`.
+- Skills baseline revision: `52a750a90f2a761592388dba46b50b0238e3964d`
+- Skills baseline applied: `2026-11-27`
 
 Treat these values as stable project decisions. Change an established identifier, license, visibility, branch policy, versioning model, localization strategy, landing-page contract, agent-automation decision, or release policy only through an explicit task that describes the migration and downstream effects.
+
+## Route map
+
+Before editing under a path, read the file its row names. A module with rules of its own keeps them in its own `AGENTS.md` of at most 150 lines, beside a `CLAUDE.md` symlink, and has a row here; this file stays at most 200 lines.
+
+| Path | Read first |
+| :--- | :--- |
+| `site/` | `docs/patterns.md` |
+| `tests/`, `scripts/` | `docs/testing.md` |
 
 ## Agent skill paths
 
@@ -54,48 +66,9 @@ when there is real content for it; none of these are placeholders to fill.
 - Ask only when a material decision cannot be discovered safely. Prefer explicit, reversible assumptions when enough context exists.
 - Give concise progress updates during long-running work.
 
-## Patterns this project repeats
-
-These are the recorded project contracts. Open issues track places where the current code does
-not yet satisfy them; do not weaken a contract to hide an implementation gap. A change that would
-break a recorded contract or establish a new pattern stops and asks first, naming the existing
-pattern, the proposed one, and why the existing one does not fit.
-
-- **One file, three layers.** `site/index.html` holds markup, a single `<style>` block, and a single
-  `<script>`. No build step, no modules, no dependencies. A second file needs a reason stronger than
-  tidiness. The owner-approved exception is separate dependency-free regression tests.
-- **Two loops.** `simulationStep()` on a 16 ms `setInterval` owns world time, physics and state;
-  `requestAnimationFrame` owns drawing and owns no simulation. Anything that changes the world goes
-  in the first, including the lifetimes of things that only draw. The world nearly pauses while the
-  document is hidden, because the browser throttles the interval, and resumes without compensating
-  for hidden elapsed time; this does not override explicit music playback intent.
-- **A node is a flat object with one life-owner.** Every trait is a plain property on the node.
-  `freshLife()` owns every per-life and transient field and runs on both paths — the first cast in
-  `rs()` and every replacement in `reborn()` — so a new trait is added in one place and cannot leak
-  between lives. Only slot identity (size, hub flag) and the authored first-life cast are set by the
-  caller.
-- **Pair state lives in typed arrays.** `affinity` and `regard` are `Float32Array` indexed by
-  `pairKey(i, j)`. They are cleared for a node's row and column when it is reborn.
-- **Absent nodes take no part.** A slot waiting to be reborn is skipped by physics, rendering,
-  bonding, selection, speech and events. Every new loop over `n` honours `absent`.
-- **Draw cost stays off the hot path.** Repeated visuals are pre-rendered (glow sprites) or cached
-  (background gradient, vignette) rather than rebuilt per frame. Canvas shadows are avoided.
-- **Three type voices.** Serif for anything a node is or says, system sans for interface, monospace
-  for figures. Colour carries meaning that text would otherwise repeat.
-- **Audio is one bus.** Every synthesised sound routes through `sfxGain`; music is the `<audio>`
-  element; speech is the Web Speech API. Each has exactly one slider.
-- **Speech is one voice at a time**, and only for a selected node.
-- **Written lines are data.** Phrase pools are flat arrays of plain sentences with no contractions,
-  because the text is spoken aloud. Placeholders are `{name}`, `{friend}`, `{rival}`.
-- **Announcements are gated.** Everything user-visible goes through `announceEvent`, which enforces
-  one at a time and a cooldown for minor notes.
-
 ## Long-running operations
 
-- Use bounded tool waits and observable completion conditions; give progress commentary at least once per minute when supported.
-- Inspect output and state before interrupting or retrying. Elapsed time alone does not prove a stall.
-- After an interruption, preserve useful evidence, diagnose the cause and narrow or change the next attempt; never repeat an unchanged failure.
-- Do not add polling infrastructure merely to monitor an agent task.
+Long-running work follows the `bench-project-standards` skill's `references/long-running-operations.md`. A delegation brief states its concurrency budget; without one, the delegated agent spawns no sub-agents. Delegate only bounded, independent work that cannot race on shared writes; the parent keeps scope, verification and every mutation.
 
 ## Before editing
 
@@ -159,22 +132,15 @@ pattern, the proposed one, and why the existing one does not fit.
 
 ## Durable project learning
 
-At wrap-up, preserve only verified, recurring project knowledge in its existing canonical owner.
-Do not retain hypotheses, raw logs, private data, transient machine state or issue-specific plans.
-An adjacent learning outside the task is proposal-only: state `Evidence`, `Canonical owner`,
-`Smallest change`, the exact `Draft`, and `Decision requested: Approve, reject, or revise.`
-Wait for approval before writing an adjacent proposal; documentation required by the accepted task
-remains part of that task. Never publish such a proposal externally without authorization.
+At wrap-up, propose recording a learning only when it is verified, specific to this project, likely
+to recur, and not already recorded, as the `bench-project-standards` skill's `references/durable-learning.md`
+defines. A command that failed twice for the same cause qualifies: record the cause and working form.
+End each finding, here or in `martonpaulo/skill-deck` for one about Skill Deck itself, as
+`bench-github-publishing` section 15 defines.
 
-## User attention
+## Output shape and asking the owner
 
-When a material choice, permission, action or distinct issue proposal needs the owner, show one
-clearly separated card in the conversation language. Name what is needed, why, the evidence,
-options and tradeoffs where relevant, the recommendation, and an exact reply format. Use the
-client's structured question tool when available. For an approval, name the exact target/change,
-risk, reversibility and recovery. For a blocker, name the smallest unblocking action and the
-observable condition for resumption. Do not hide a pending decision in a general status summary.
-Follow the active workflow's authority: a proposed follow-up does not authorize its publication.
+Shape every message and ask the owner as Skill Deck's global rules define (`global/AGENTS.md`, which `bench sync` links into every agent); the four kinds of request are in the `bench-owner-questions` skill's `references/attention-cards.md`. Do every action your tools allow instead of handing it to the owner; hand over only what the owner alone can do, as those rules list.
 
 ## Configuration and repository hygiene
 
@@ -182,28 +148,6 @@ Follow the active workflow's authority: a proposed follow-up does not authorize 
 - When local environment variables exist, maintain `.env.example` with every supported name and a safe placeholder in the same syntax as the real value.
 - Configure dependency updates, CI, release workflows, a release channel, signing, and secure secret storage when distribution or project risk requires them. Do not add placeholder automation. A workflow declares the paths it can observe, so an unrelated change does not pay for it.
 - Keep secrets in the platform or provider's secure store, never in versioned files.
-
-## Test ownership and commands
-
-The product has no build step or package dependencies. `package.json` only names the tasks: `pnpm validate` is the cheap half and the CI gate, `pnpm test:browser` the expensive one. The checks come in two halves, and the
-pipeline is gated so each runs only when something it can observe has changed.
-
-- **Cheap, nothing installed.** `node --test` runs the regressions under `tests/`, which load the
-  real `index.html` through `tests/harness.js` — a `vm` context with a virtual clock, a DOM built
-  from the page's own markup, and switchable Web Speech and Web Audio globals. `index.html` ships no
-  test hooks. Tests exercise observable simulation transitions and browser API boundaries, not
-  source-text snapshots, duplicated constants or private implementation wiring. `scripts/check-embedded-script.mjs`
-  checks that the embedded script parses and runs first. Both run as `pnpm validate`. Workflow:
-  `.github/workflows/validate.yml`, gated on `site/**`, `tests/**` and the checking script.
-- **Expensive, real engines.** `node tests/browser/acceptance.mjs [engine]` serves `site/` and
-  drives Chromium, Gecko and WebKit. Playwright is a checking tool installed on demand, never a
-  project dependency and never loaded by the page; `node_modules/` is ignored. Workflow:
-  `.github/workflows/browser.yml`, gated on `site/**` and `tests/browser/**` and
-  pinned to one Playwright version so a cache hit means the same browser builds.
-
-Node tests do not substitute for the rendered checks, and neither substitutes for the human
-judgements — screen-reader behaviour, listening quality, comfort under reduced motion — which must
-be reported as unverified rather than claimed.
 
 ## Tests and validation
 
@@ -246,12 +190,4 @@ be reported as unverified rather than claimed.
 
 ## Completion report
 
-Lead with the outcome and include:
-
-- what changed and why;
-- files touched;
-- validation commands and actual results;
-- warnings, failures, skips, manual gaps, and remaining risks;
-- temporary artifacts kept or removed;
-- commit, branch, and push status when applicable;
-- final worktree status and unrelated dirty files left untouched.
+Lead with the outcome, then: what changed and why; files touched; validation commands and actual results; warnings, failures, skips, manual gaps, and remaining risks; temporary artifacts kept or removed; commit, branch, and push status; final worktree status and unrelated dirty files left untouched.
